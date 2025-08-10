@@ -1,0 +1,115 @@
+[project]
+name = "nonebot-plugin-alisten"
+version = "0.1.0"
+description = "NoneBot 听歌房插件"
+authors = [{ name = "uy/sun", email = "hmy0119@gmail.com" }]
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.12"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/bihua-university/nonebot-plugin-alisten"
+Repository = "https://github.com/bihua-university/nonebot-plugin-alisten.git"
+Issues = "https://github.com/bihua-university/nonebot-plugin-alisten/issues"
+Changelog = "https://github.com/bihua-university/nonebot-plugin-alisten/src/branch/main/CHANGELOG.md"
+
+[build-system]
+requires = ["uv_build>=0.8.5,<0.9.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "pytest-cov>=6.2.1",
+    "pytest-mock>=3.14.1",
+    "pytest-xdist>=3.8.0",
+    "poethepoet>=0.36.0",
+    "bump-my-version>=1.2.1",
+]
+
+[tool.uv.pip]
+universal = true
+
+[tool.poe.tasks]
+test = "pytest --cov=src --cov-report xml --junitxml=./junit.xml -n auto"
+bump = "bump-my-version bump"
+show-bump = "bump-my-version show-bump"
+
+[tool.pyright]
+pythonVersion = "3.12"
+pythonPlatform = "All"
+typeCheckingMode = "standard"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.ruff.lint]
+select = [
+    "W",   # pycodestyle warnings
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "UP",  # pyupgrade
+    "C4",  # flake8-comprehensions
+    "T10", # flake8-debugger
+    "T20", # flake8-print
+    "PYI", # flake8-pyi
+    "PT",  # flake8-pytest-style
+    "Q",   # flake8-quotes
+    "TC",  # flake8-type-checking
+    "DTZ", # flake8-datetimez
+    "RUF", # Ruff-specific rules
+    "I",   # isort
+]
+ignore = [
+    "E402",   # module-import-not-at-top-of-file
+    "RUF001", # ambiguous-unicode-character-string
+    "RUF002", # ambiguous-unicode-character-docstring
+    "RUF003", # ambiguous-unicode-character-comment
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@overload",
+    "except ImportError:",
+]
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+
+[tool.bumpversion]
+current_version = "0.1.0"
+commit = true
+message = "chore(release): {new_version}"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = "version = \"{current_version}\""
+replace = "version = \"{new_version}\""
+
+[[tool.bumpversion.files]]
+filename = "CHANGELOG.md"
+search = "## [Unreleased]"
+replace = "## [Unreleased]\n\n## [{new_version}] - {now:%Y-%m-%d}"
+
+[[tool.bumpversion.files]]
+filename = "CHANGELOG.md"
+regex = true
+search = "\\[Unreleased\\]: (https://.+?)v{current_version}\\.\\.\\.HEAD"
+replace = "[Unreleased]: \\1v{new_version}...HEAD\n[{new_version}]: \\1v{current_version}...v{new_version}"
+
+[[tool.bumpversion.files]]
+filename = "uv.lock"
+search = "name = \"${REPO_NAME_KEBAB}\"\nversion = \"{current_version}\""
+replace = "name = \"${REPO_NAME_KEBAB}\"\nversion = \"{new_version}\""
