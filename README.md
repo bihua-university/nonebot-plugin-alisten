@@ -121,7 +121,7 @@ uv add nonebot-plugin-alisten
 - [nonebot2](https://github.com/nonebot/nonebot2) >= 2.4.3
 - [nonebot-plugin-alconna](https://github.com/nonebot/plugin-alconna) >= 0.59.4
 - [nonebot-plugin-orm](https://github.com/nonebot/plugin-orm) >= 0.8.2
-- [nonebot-plugin-user](https://github.com/nonebot/plugin-user) >= 0.5.1
+- [nonebot-plugin-user](https://github.com/he0119/nonebot-plugin-user) >= 0.5.1
 
 ## 开发
 
@@ -157,7 +157,7 @@ uv add nonebot-plugin-alisten
 
 ## 鸣谢
 
-- [alisten](https://github.com/bihua-university/alisten) - 提供音乐服务支持
+- [Alisten](https://github.com/bihua-university/alisten) - 提供音乐服务支持
 - [NoneBot2](https://github.com/nonebot/nonebot2) - 优秀的 Python 异步聊天机器人框架
 
 感谢以下开发者作出的贡献：

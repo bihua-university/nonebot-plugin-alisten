@@ -45,7 +45,7 @@ class ErrorResponse(BaseModel):
     error: str
 
 
-class AListenAPI:
+class AlistenAPI:
     """alisten API 客户端"""
 
     async def pick_music(
@@ -108,4 +108,4 @@ class AListenAPI:
 
 
 # 全局 API 实例
-api = AListenAPI()
+api = AlistenAPI()
