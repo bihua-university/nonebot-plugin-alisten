@@ -17,7 +17,7 @@ dependencies = [
 Homepage = "https://github.com/bihua-university/nonebot-plugin-alisten"
 Repository = "https://github.com/bihua-university/nonebot-plugin-alisten.git"
 Issues = "https://github.com/bihua-university/nonebot-plugin-alisten/issues"
-Changelog = "https://github.com/bihua-university/nonebot-plugin-alisten/src/branch/main/CHANGELOG.md"
+Changelog = "https://github.com/bihua-university/nonebot-plugin-alisten/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["uv_build>=0.8.5,<0.9.0"]
