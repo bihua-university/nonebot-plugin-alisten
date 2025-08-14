@@ -124,3 +124,9 @@ replace = "[Unreleased]: \\1v{new_version}...HEAD\n[{new_version}]: \\1v{current
 filename = "uv.lock"
 search = "name = \"nonebot-plugin-alisten\"\nversion = \"{current_version}\""
 replace = "name = \"nonebot-plugin-alisten\"\nversion = \"{new_version}\""
+
+[tool.nonebot]
+plugins = ["nonebot_plugin_alisten"]
+adapters = [
+    { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11", project_link = "nonebot-adapter-onebot", desc = "OneBot V11 协议" },
+]
