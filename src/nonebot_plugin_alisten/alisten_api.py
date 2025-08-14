@@ -2,6 +2,7 @@
 
 import httpx
 from nonebot.log import logger
+from nonebot_plugin_user import UserSession
 from pydantic import BaseModel
 
 from .models import AlistenConfig
@@ -9,7 +10,7 @@ from .models import AlistenConfig
 
 class User(BaseModel):
     name: str
-    email: str | None = None
+    email: str
 
 
 class PickMusicRequest(BaseModel):
@@ -48,14 +49,11 @@ class ErrorResponse(BaseModel):
 class AlistenAPI:
     """Alisten API 客户端"""
 
-    async def pick_music(
-        self,
-        name: str,
-        source: str,
-        config: AlistenConfig,
-        user_name: str,
-        user_email: str | None,
-    ) -> SuccessResponse | ErrorResponse:
+    def __init__(self, config: AlistenConfig, session: UserSession):
+        self.config = config
+        self.session = session
+
+    async def pick_music(self, name: str, source: str) -> SuccessResponse | ErrorResponse:
         """点歌
 
         Args:
@@ -68,14 +66,14 @@ class AlistenAPI:
             点歌结果
         """
         request_data = PickMusicRequest(
-            houseId=config.house_id,
-            housePwd=config.house_password,
-            user=User(name=user_name, email=user_email or ""),
+            houseId=self.config.house_id,
+            housePwd=self.config.house_password,
+            user=User(name=self.session.user_name, email=self.session.user_email or ""),
             name=name,
             source=source,
         )
 
-        url = f"{config.server_url}/music/pick"
+        url = f"{self.config.server_url}/music/pick"
 
         try:
             async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
@@ -110,7 +108,3 @@ class AlistenAPI:
         except Exception as e:
             logger.error(f"Alisten API 未知错误: {e}")
             return ErrorResponse(error="点歌失败，请稍后重试")
-
-
-# 全局 API 实例
-api = AlistenAPI()

@@ -11,10 +11,10 @@ require("nonebot_plugin_orm")
 from arclet.alconna import AllParam
 from nonebot_plugin_alconna import Alconna, Args, CommandMeta, Match, Subcommand, UniMessage, on_alconna
 from nonebot_plugin_orm import async_scoped_session
-from nonebot_plugin_user import User, UserSession
-from sqlalchemy import select
+from nonebot_plugin_user import UserSession
 
-from .alisten_api import SuccessResponse, api
+from .alisten_api import AlistenAPI, SuccessResponse
+from .depends import get_alisten_api, get_config
 from .models import AlistenConfig
 
 __plugin_meta__ = PluginMetadata(
@@ -38,13 +38,6 @@ __plugin_meta__ = PluginMetadata(
 • db: Bilibili""",
     supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna", "nonebot_plugin_user"),
 )
-
-
-async def get_config(user: UserSession, db_session: async_scoped_session) -> AlistenConfig | None:
-    """获取 Alisten 配置"""
-    stmt = select(AlistenConfig).where(AlistenConfig.session_id == user.session_id)
-    result = await db_session.execute(stmt)
-    return result.scalar_one_or_none()
 
 
 # 音乐配置管理命令
@@ -183,9 +176,8 @@ async def music_handle_first_receive(
 
 @music_cmd.got_path("keywords", prompt="你想听哪首歌呢？")
 async def music_handle(
-    user: User,
     keywords: UniMessage,
-    config: AlistenConfig = Depends(get_config),
+    api: AlistenAPI = Depends(get_alisten_api),
 ):
     """处理点歌请求"""
     name = keywords.extract_plain_text().strip()
@@ -205,13 +197,7 @@ async def music_handle(
         # Bilibili BV号
         source = "db"
 
-    result = await api.pick_music(
-        name=name,
-        source=source,
-        config=config,
-        user_name=user.name,
-        user_email=user.email,
-    )
+    result = await api.pick_music(name=name, source=source)
 
     if isinstance(result, SuccessResponse):
         msg = "点歌成功！歌曲已加入播放列表"
