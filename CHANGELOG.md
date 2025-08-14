@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-08-14
+
 ### Fixed
 
 - 修正迁移分支标签为正确的插件名称
@@ -23,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 正常工作的版本。
 
-[Unreleased]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/bihua-university/nonebot-plugin-alisten/releases/tag/v0.1.0
