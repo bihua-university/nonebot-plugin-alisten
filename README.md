@@ -45,7 +45,7 @@ uv add nonebot-plugin-alisten
 ## 功能特性
 
 - 🎵 支持多音乐平台：网易云音乐、QQ音乐、Bilibili
-- 🎯 支持多种搜索方式：歌曲名、BV号、特定平台ID
+- 🎯 支持多种搜索方式：歌曲名、BV号、特定平台歌曲名
 - 🏠 支持多房间配置，每个群组独立管理
 - 🔒 支持房间密码保护
 - 👥 用户友好的点歌体验
@@ -75,7 +75,7 @@ uv add nonebot-plugin-alisten
 /music Sagitta luminis          # 搜索歌曲名
 /点歌 青花瓷                     # 使用中文别名
 /music BV1Xx411c7md            # 使用B站BV号
-/music qq:123456               # 指定QQ音乐ID
+/music qq:青花瓷                # 指定QQ音乐搜索
 /music wy:青花瓷                # 指定网易云搜索
 ```
 
@@ -142,7 +142,7 @@ uv add nonebot-plugin-alisten
 2. 安装依赖
 
    ```bash
-   uv install
+   uv sync
    ```
 
 3. 运行测试
