@@ -716,7 +716,7 @@ dev = [
 requires-dist = [
     { name = "nonebot-plugin-alconna", specifier = ">=0.59.4" },
     { name = "nonebot-plugin-orm", specifier = ">=0.8.2" },
-    { name = "nonebot-plugin-user", specifier = ">=0.5.1" },
+    { name = "nonebot-plugin-user", specifier = ">=0.5.3" },
     { name = "nonebot2", specifier = ">=2.4.3" },
 ]
 
@@ -789,7 +789,7 @@ wheels = [
 
 [[package]]
 name = "nonebot-plugin-user"
-version = "0.5.1"
+version = "0.5.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "expiringdictx" },
@@ -798,9 +798,9 @@ dependencies = [
     { name = "nonebot-plugin-uninfo" },
     { name = "nonebot2" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/6d/51bc6b251e9a6d8ba2e8b3230cfa64d3d295469d5d77b1f0958019e15d72/nonebot_plugin_user-0.5.1.tar.gz", hash = "sha256:69a1ad64c385c94dea57427423425216dc317c037e1be2b09a9b9ed4952c4452", size = 10685, upload-time = "2025-05-26T03:48:47.277Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/32/ca/7951643c4862c004ed00026dc11e0495d45f0294654277d0ee07fe4d3245/nonebot_plugin_user-0.5.3.tar.gz", hash = "sha256:67288a0badd775af693d95eb2cbe6924925ad5f24b94b72afde6e0376c01506a", size = 11743, upload-time = "2025-08-13T13:02:25.619Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8d/c6/40447ed9f5a957e88edc129a44acba891d110f4221fd7b16db5238a4f0bd/nonebot_plugin_user-0.5.1-py3-none-any.whl", hash = "sha256:acc14095e1f01a4a0730fe91d4508cb18859264248613935a1e501856463c9b5", size = 14055, upload-time = "2025-05-26T03:48:46.083Z" },
+    { url = "https://files.pythonhosted.org/packages/66/81/dd9f976fe7175554aea2f36b51c5f1e6e34845d0a8899403a46f1e3ff1bd/nonebot_plugin_user-0.5.3-py3-none-any.whl", hash = "sha256:c41ff5c3bf3f9b1a5e9ffd73ef4df61876a2b0a32e52ecca5c60103cf4e23118", size = 15405, upload-time = "2025-08-13T13:02:24.287Z" },
 ]
 
 [[package]]

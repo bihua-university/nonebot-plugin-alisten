@@ -10,7 +10,7 @@ dependencies = [
     "nonebot2>=2.4.3",
     "nonebot-plugin-alconna>=0.59.4",
     "nonebot-plugin-orm>=0.8.2",
-    "nonebot-plugin-user>=0.5.1",
+    "nonebot-plugin-user>=0.5.3",
 ]
 
 [project.urls]
