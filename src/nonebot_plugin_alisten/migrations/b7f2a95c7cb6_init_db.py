@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 revision: str = "b7f2a95c7cb6"
 down_revision: str | Sequence[str] | None = None
-branch_labels: str | Sequence[str] | None = ("alisten",)
+branch_labels: str | Sequence[str] | None = ("nonebot_plugin_alisten",)
 depends_on: str | Sequence[str] | None = None
 
 
