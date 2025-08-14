@@ -122,5 +122,5 @@ replace = "[Unreleased]: \\1v{new_version}...HEAD\n[{new_version}]: \\1v{current
 
 [[tool.bumpversion.files]]
 filename = "uv.lock"
-search = "name = \"${REPO_NAME_KEBAB}\"\nversion = \"{current_version}\""
-replace = "name = \"${REPO_NAME_KEBAB}\"\nversion = \"{new_version}\""
+search = "name = \"nonebot-plugin-alisten\"\nversion = \"{current_version}\""
+replace = "name = \"nonebot-plugin-alisten\"\nversion = \"{new_version}\""
