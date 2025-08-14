@@ -8,7 +8,7 @@ from nonebot import get_adapter
 from nonebot.adapters.onebot.v11 import Adapter, Bot
 from nonebug import App
 
-from tests.fake import fake_group_message_event_v11
+from tests.fake import fake_group_message_event_v11, fake_private_message_event_v11
 
 
 async def test_music_no_config(app: App):
@@ -325,3 +325,18 @@ async def test_music_success_no_email(app: App, respx_mock: respx.MockRouter):
             "source": "wy",
         }
     )
+
+
+async def test_music_private(app: App):
+    """测试私聊场景"""
+    from nonebot.adapters.onebot.v11 import Message
+
+    from nonebot_plugin_alisten import music_cmd
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+
+        event = fake_private_message_event_v11(message=Message("/music test"))
+        ctx.receive_event(bot, event)
+        ctx.should_not_pass_rule(music_cmd)
