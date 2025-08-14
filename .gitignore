@@ -178,3 +178,5 @@ pyrightconfig.json
 
 # VSCode
 .vscode/*
+
+data/

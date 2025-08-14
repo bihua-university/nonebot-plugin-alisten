@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Fixed
+
+- 修正迁移分支标签为正确的插件名称
+
 ## [0.1.1] - 2025-08-14
 
 ### Added
