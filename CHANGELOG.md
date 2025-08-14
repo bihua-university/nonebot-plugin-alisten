@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-08-14
+
 ### Added
 
 - 支持传递用户邮箱
@@ -17,12 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 正常工作的版本。
 
-## [0.0.1] - 2021-11-03
-
-### Added
-
-- 初始版本。
-
-[Unreleased]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.0.1...v0.1.0
-[0.0.1]: https://github.com/bihua-university/nonebot-plugin-alisten/releases/tag/v0.0.1
+[Unreleased]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/bihua-university/nonebot-plugin-alisten/releases/tag/v0.1.0
