@@ -4,6 +4,7 @@ from nonebot import require
 from nonebot.params import Depends
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
+from nonebot.rule import Rule
 
 require("nonebot_plugin_alconna")
 require("nonebot_plugin_user")
@@ -40,6 +41,11 @@ __plugin_meta__ = PluginMetadata(
 )
 
 
+async def is_group(session: UserSession) -> bool:
+    """确保在群组中使用"""
+    return not session.session.scene.is_private
+
+
 # 音乐配置管理命令
 alisten_config_cmd = on_alconna(
     Alconna(
@@ -66,6 +72,7 @@ alisten_config_cmd = on_alconna(
     permission=SUPERUSER,
     use_cmd_start=True,
     block=True,
+    rule=Rule(is_group),
 )
 
 
@@ -155,6 +162,7 @@ music_cmd = on_alconna(
     aliases={"点歌"},
     use_cmd_start=True,
     block=True,
+    rule=Rule(is_group),
 )
 
 

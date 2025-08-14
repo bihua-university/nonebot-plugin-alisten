@@ -3,7 +3,7 @@ from nonebot import get_adapter
 from nonebot.adapters.onebot.v11 import Adapter, Bot, Message
 from nonebug import App
 
-from tests.fake import fake_group_message_event_v11
+from tests.fake import fake_group_message_event_v11, fake_private_message_event_v11
 
 
 async def test_config_set_new(app: App):
@@ -168,3 +168,18 @@ async def test_config_permission_denied(app: App):
         ctx.receive_event(bot, event)
         # 权限检查失败，不会处理消息
         ctx.should_not_pass_permission(alisten_config_cmd)
+
+
+async def test_config_private(app: App):
+    """测试私聊场景"""
+    from nonebot.adapters.onebot.v11 import Message
+
+    from nonebot_plugin_alisten import alisten_config_cmd
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+
+        event = fake_private_message_event_v11(message=Message("/alisten"))
+        ctx.receive_event(bot, event)
+        ctx.should_not_pass_rule(alisten_config_cmd)
