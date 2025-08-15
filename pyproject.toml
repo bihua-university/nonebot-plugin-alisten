@@ -36,8 +36,9 @@ dev = [
     "nonebug>=0.4.3",
     "inline-snapshot>=0.27.1",
     "respx>=0.22.0",
-    "nonebot2[fastapi]>=2.4.3",
+    "nonebot2[fastapi,httpx]>=2.4.3",
     "nonebot-plugin-orm[default]>=0.8.2",
+    "pip-system-certs>=5.2",
 ]
 
 [tool.uv.pip]
