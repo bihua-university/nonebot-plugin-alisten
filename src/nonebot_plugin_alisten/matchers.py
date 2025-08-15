@@ -1,13 +1,7 @@
-from nonebot import require
+from arclet.alconna import AllParam
 from nonebot.params import Depends
 from nonebot.permission import SUPERUSER
-from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 from nonebot.rule import Rule
-
-require("nonebot_plugin_alconna")
-require("nonebot_plugin_user")
-require("nonebot_plugin_orm")
-from arclet.alconna import AllParam
 from nonebot_plugin_alconna import Alconna, Args, CommandMeta, Match, Subcommand, UniMessage, on_alconna
 from nonebot_plugin_orm import async_scoped_session
 from nonebot_plugin_user import UserSession
@@ -15,30 +9,6 @@ from nonebot_plugin_user import UserSession
 from .alisten_api import AlistenAPI, SuccessResponse
 from .depends import get_alisten_api, get_config
 from .models import AlistenConfig
-
-__plugin_meta__ = PluginMetadata(
-    name="音乐",
-    description="通过 Alisten 服务点歌",
-    usage="""参数为歌曲相关信息
-/music Sagitta luminis               # 搜索并点歌（默认为网易云）
-/点歌 青花瓷                          # 中文别名
-/music BV1Xx411c7md                  # Bilibili BV号
-/music qq:song_name                  # QQ音乐
-/music wy:song_name                  # 网易云音乐
-
-配置命令（仅限超级用户）：
-/alisten config set <server_url> <house_id> [house_password]  # 设置配置
-/alisten config show                                          # 查看当前配置
-/alisten config delete                                        # 删除配置
-
-支持的音乐源：
-• wy: 网易云音乐（默认）
-• qq: QQ音乐
-• db: Bilibili""",
-    type="application",
-    homepage="https://github.com/bihua-university/nonebot-plugin-alisten",
-    supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna", "nonebot_plugin_user"),
-)
 
 
 async def is_group(session: UserSession) -> bool:
