@@ -16,8 +16,9 @@ sys.path.insert(0, str(HOME_DIR))
 
 def pytest_configure(config: pytest.Config) -> None:
     config.stash[NONEBOT_INIT_KWARGS] = {
-        "alembic_startup_check": False,
+        "driver": "~httpx",
         "superusers": ["10"],
+        "alembic_startup_check": False,
         "alconna_cache_message": False,
     }
     # 如果不设置为 False，会运行插件的 on_startup 函数

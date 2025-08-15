@@ -1,6 +1,9 @@
 """Alisten 服务器 API 客户端"""
 
-import httpx
+from typing import cast
+
+from nonebot import get_driver
+from nonebot.drivers import HTTPClientMixin, Request
 from nonebot.log import logger
 from nonebot_plugin_user import UserSession
 from pydantic import BaseModel
@@ -76,35 +79,28 @@ class AlistenAPI:
         url = f"{self.config.server_url}/music/pick"
 
         try:
-            async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
-                response = await client.post(
-                    url,
-                    json=request_data.model_dump(),
-                    headers={"Content-Type": "application/json"},
-                )
+            driver = cast("HTTPClientMixin", get_driver())
 
-                if response.status_code == 200:
-                    # 尝试解析成功响应
-                    try:
-                        success_response = SuccessResponse.model_validate(response.json())
-                        return success_response
-                    except Exception as e:
-                        logger.error(f"解析成功响应失败: {e}")
-                        return ErrorResponse(error="响应数据格式错误")
-                else:
-                    # 处理错误响应
-                    try:
-                        error_response = ErrorResponse.model_validate(response.json())
-                        return error_response
-                    except Exception:
-                        return ErrorResponse(error=f"服务器错误: {response.status_code}")
+            # 创建请求对象
+            request = Request(
+                method="POST",
+                url=url,
+                headers={"Content-Type": "application/json"},
+                json=request_data.model_dump(),
+            )
 
-        except httpx.TimeoutException:
-            logger.error("Alisten API 请求超时")
-            return ErrorResponse(error="请求超时，请稍后重试")
-        except httpx.RequestError as e:
-            logger.error(f"Alisten API 请求失败: {e}")
-            return ErrorResponse(error="网络连接失败，请检查 Alisten 服务是否正常运行")
-        except Exception as e:
-            logger.error(f"Alisten API 未知错误: {e}")
-            return ErrorResponse(error="点歌失败，请稍后重试")
+            response = await driver.request(request)
+            if response.content is None:
+                return ErrorResponse(error="响应内容为空")
+
+            if response.status_code == 200:
+                success_response = SuccessResponse.model_validate_json(response.content)
+                return success_response
+
+            else:
+                error_response = ErrorResponse.model_validate_json(response.content)
+                return error_response
+
+        except Exception:
+            logger.exception("Alisten API 请求失败")
+            return ErrorResponse(error="请求失败，请稍后重试")
