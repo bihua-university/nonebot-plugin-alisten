@@ -121,10 +121,10 @@ uv add nonebot-plugin-alisten
 
 本插件依赖以下组件：
 
-- [nonebot2](https://github.com/nonebot/nonebot2) >= 2.4.3
-- [nonebot-plugin-alconna](https://github.com/nonebot/plugin-alconna) >= 0.59.4
-- [nonebot-plugin-orm](https://github.com/nonebot/plugin-orm) >= 0.8.2
-- [nonebot-plugin-user](https://github.com/he0119/nonebot-plugin-user) >= 0.5.1
+- [nonebot2](https://github.com/nonebot/nonebot2)
+- [nonebot-plugin-alconna](https://github.com/nonebot/plugin-alconna)
+- [nonebot-plugin-orm](https://github.com/nonebot/plugin-orm)
+- [nonebot-plugin-user](https://github.com/he0119/nonebot-plugin-user)
 
 ## 开发
 
