@@ -20,6 +20,9 @@ _✨ NoneBot 听歌房插件 ✨_
     <img src="https://img.shields.io/pypi/v/nonebot-plugin-alisten.svg" alt="pypi">
   </a>
   <img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="python">
+  <a href="https://codecov.io/github/bihua-university/nonebot-plugin-alisten" >
+    <img src="https://codecov.io/github/bihua-university/nonebot-plugin-alisten/graph/badge.svg?token=ZQQLZ33XR3"/ alt="codecov">
+  </a>
 </p>
 
 ## 安装
