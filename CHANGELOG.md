@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.2.3] - 2025-08-15
+
 ### Added
 
 - 使用 NoneBot 提供的 request 函数
@@ -41,7 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 正常工作的版本。
 
-[Unreleased]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.1.1...v0.2.0
