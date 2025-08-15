@@ -37,6 +37,8 @@ __plugin_meta__ = PluginMetadata(
 • wy: 网易云音乐（默认）
 • qq: QQ音乐
 • db: Bilibili""",
+    type="application",
+    homepage="https://github.com/bihua-university/nonebot-plugin-alisten",
     supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna", "nonebot_plugin_user"),
 )
 
