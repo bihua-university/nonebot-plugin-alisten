@@ -1,6 +1,7 @@
 from arclet.alconna import AllParam
+from nonebot.matcher import Matcher
 from nonebot.params import Depends
-from nonebot.permission import SUPERUSER
+from nonebot.permission import SuperUser
 from nonebot.rule import Rule
 from nonebot_plugin_alconna import Alconna, Args, CommandMeta, Match, Subcommand, UniMessage, on_alconna
 from nonebot_plugin_orm import async_scoped_session
@@ -14,6 +15,12 @@ from .models import AlistenConfig
 async def is_group(session: UserSession) -> bool:
     """确保在群组中使用"""
     return not session.session.scene.is_private
+
+
+async def ensure_superuser(matcher: Matcher, is_superuser: bool = Depends(SuperUser())):
+    """确保是超级用户"""
+    if not is_superuser:
+        await matcher.finish("权限不足，仅限超级用户使用")
 
 
 # 音乐配置管理命令
@@ -44,7 +51,6 @@ alisten_config_cmd = on_alconna(
 /alisten config delete                                        # 删除配置""",
         ),
     ),
-    permission=SUPERUSER,
     use_cmd_start=True,
     block=True,
     rule=Rule(is_group),
@@ -52,7 +58,7 @@ alisten_config_cmd = on_alconna(
 
 
 # 配置管理命令处理
-@alisten_config_cmd.assign("config.set")
+@alisten_config_cmd.assign("config.set", parameterless=[Depends(ensure_superuser)])
 async def handle_config_set(
     user: UserSession,
     db_session: async_scoped_session,
@@ -101,7 +107,7 @@ async def handle_config_show(config: AlistenConfig | None = Depends(get_config))
     )
 
 
-@alisten_config_cmd.assign("config.delete")
+@alisten_config_cmd.assign("config.delete", parameterless=[Depends(ensure_superuser)])
 async def handle_config_delete(
     db_session: async_scoped_session,
     config: AlistenConfig | None = Depends(get_config),

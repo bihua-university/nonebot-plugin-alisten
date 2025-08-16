@@ -39,10 +39,7 @@ async def test_house_info(app: App, respx_mock: respx.MockRouter):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
-        event = fake_group_message_event_v11(
-            message=Message("/alisten house info"),
-            sender_id=10,  # 超级用户
-        )
+        event = fake_group_message_event_v11(message=Message("/alisten house info"))
         ctx.receive_event(bot, event)
         ctx.should_call_send(
             event,
@@ -82,10 +79,7 @@ async def test_house_info_not_exist(app: App, respx_mock: respx.MockRouter):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
-        event = fake_group_message_event_v11(
-            message=Message("/alisten house info"),
-            sender_id=10,  # 超级用户
-        )
+        event = fake_group_message_event_v11(message=Message("/alisten house info"))
         ctx.receive_event(bot, event)
         ctx.should_call_send(event, "未找到房间ID为 room123 的房间")
         ctx.should_finished(alisten_config_cmd)

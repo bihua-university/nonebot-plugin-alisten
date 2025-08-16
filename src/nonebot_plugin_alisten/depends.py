@@ -21,5 +21,3 @@ async def get_alisten_api(
     """获取 Alisten API 实例"""
     if config:
         return AlistenAPI(config=config, session=session)
-
-    return None
