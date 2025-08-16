@@ -7,7 +7,12 @@ from nonebot_plugin_alconna import Alconna, Args, CommandMeta, Match, Subcommand
 from nonebot_plugin_orm import async_scoped_session
 from nonebot_plugin_user import UserSession
 
-from .alisten_api import AlistenAPI, ErrorResponse, SuccessResponse
+from .alisten_api import (
+    AlistenAPI,
+    ErrorResponse,
+    SuccessResponse,
+    VoteSkipResponse,
+)
 from .depends import get_alisten_api, get_config
 from .models import AlistenConfig
 
@@ -24,9 +29,21 @@ async def ensure_superuser(matcher: Matcher, is_superuser: bool = Depends(SuperU
 
 
 # 音乐配置管理命令
-alisten_config_cmd = on_alconna(
+alisten_cmd = on_alconna(
     Alconna(
         "alisten",
+        Subcommand(
+            "music",
+            Subcommand(
+                "pick",
+                Args["keywords?#音乐名称或信息", AllParam],
+                help_text="通过 Alisten 服务点歌，支持多种音乐平台",
+            ),
+            Subcommand("playlist", help_text="显示当前房间的播放列表"),
+            Subcommand("delete", Args["name#要删除的音乐名称", str], help_text="从播放列表中删除指定音乐"),
+            Subcommand("good", Args["name#要点赞的音乐名称", str], help_text="为播放列表中的音乐点赞"),
+            Subcommand("skip", help_text="投票跳过当前播放的音乐"),
+        ),
         Subcommand(
             "config",
             Subcommand(
@@ -41,6 +58,7 @@ alisten_config_cmd = on_alconna(
         Subcommand(
             "house",
             Subcommand("info", help_text="显示当前房间的信息"),
+            Subcommand("user", help_text="显示当前房间的用户列表"),
             help_text="管理 Alisten 房间",
         ),
         meta=CommandMeta(
@@ -56,9 +74,66 @@ alisten_config_cmd = on_alconna(
     rule=Rule(is_group),
 )
 
+music_pick_cmd = alisten_cmd.dispatch("music.pick")
+
+
+@music_pick_cmd.handle()
+async def music_pick_handle_first_receive(
+    keywords: Match[UniMessage],
+    config: AlistenConfig | None = Depends(get_config),
+):
+    # 首先检查是否有配置
+    if not config:
+        await music_pick_cmd.finish(
+            "当前群组未配置 Alisten 服务\n请联系管理员使用 /alisten config set 命令进行配置",
+            at_sender=True,
+        )
+
+    if keywords.available:
+        music_pick_cmd.set_path_arg("~keywords", keywords.result)
+
+
+@music_pick_cmd.got_path("~keywords", prompt="你想听哪首歌呢？")
+async def music_pick_handle(
+    keywords: UniMessage,
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """处理点歌请求"""
+    name = keywords.extract_plain_text().strip()
+    if not name:
+        await music_pick_cmd.reject_path("keywords", "你想听哪首歌呢？")
+
+    source = "wy"  # 默认音乐源
+
+    # 解析特殊格式的输入
+    if ":" in name:
+        # 格式如 "wy:song_name" 或 "qq:song_name"
+        parts = name.split(":", 1)
+        if len(parts) == 2 and parts[0] in ["wy", "qq", "db"]:
+            source = parts[0]
+            name = parts[1]
+    elif name.startswith("BV"):
+        # Bilibili BV号
+        source = "db"
+
+    result = await api.pick_music(name=name, source=source)
+
+    if isinstance(result, SuccessResponse):
+        msg = "点歌成功！歌曲已加入播放列表"
+        msg += f"\n歌曲：{result.data.name}"
+        source_name = {
+            "wy": "网易云音乐",
+            "qq": "QQ音乐",
+            "db": "Bilibili",
+        }.get(result.data.source, result.data.source)
+        msg += f"\n来源：{source_name}"
+        await music_pick_cmd.finish(msg, at_sender=True)
+    else:
+        await music_pick_cmd.finish(result.error, at_sender=True)
+
 
 # 配置管理命令处理
-@alisten_config_cmd.assign("config.set", parameterless=[Depends(ensure_superuser)])
+@alisten_cmd.assign("config.set", parameterless=[Depends(ensure_superuser)])
 async def handle_config_set(
     user: UserSession,
     db_session: async_scoped_session,
@@ -85,7 +160,7 @@ async def handle_config_set(
 
     await db_session.commit()
 
-    await alisten_config_cmd.finish(
+    await alisten_cmd.finish(
         f"Alisten 配置已设置:\n"
         f"服务器地址: {server_url}\n"
         f"房间ID: {house_id}\n"
@@ -93,13 +168,13 @@ async def handle_config_set(
     )
 
 
-@alisten_config_cmd.assign("config.show")
+@alisten_cmd.assign("config.show")
 async def handle_config_show(config: AlistenConfig | None = Depends(get_config)):
     """显示当前配置"""
     if not config:
-        await alisten_config_cmd.finish("当前群组未配置 Alisten 服务")
+        await alisten_cmd.finish("当前群组未配置 Alisten 服务")
 
-    await alisten_config_cmd.finish(
+    await alisten_cmd.finish(
         f"当前 Alisten 配置:\n"
         f"服务器地址: {config.server_url}\n"
         f"房间ID: {config.house_id}\n"
@@ -107,31 +182,132 @@ async def handle_config_show(config: AlistenConfig | None = Depends(get_config))
     )
 
 
-@alisten_config_cmd.assign("config.delete", parameterless=[Depends(ensure_superuser)])
+@alisten_cmd.assign("config.delete", parameterless=[Depends(ensure_superuser)])
 async def handle_config_delete(
     db_session: async_scoped_session,
     config: AlistenConfig | None = Depends(get_config),
 ):
     """删除配置"""
     if not config:
-        await alisten_config_cmd.finish("当前群组未配置 Alisten 服务")
+        await alisten_cmd.finish("当前群组未配置 Alisten 服务")
 
     await db_session.delete(config)
     await db_session.commit()
 
-    await alisten_config_cmd.finish("Alisten 配置已删除")
+    await alisten_cmd.finish("Alisten 配置已删除")
 
 
-@alisten_config_cmd.assign("house.info")
+# 播放列表命令处理
+@alisten_cmd.assign("music.playlist")
+async def playlist_handle(
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """获取播放列表"""
+    result = await api.get_playlist()
+
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
+
+    if not result.playlist:
+        await alisten_cmd.finish("播放列表为空", at_sender=True)
+
+    msg = "当前播放列表：\n"
+    for i, item in enumerate(result.playlist, 1):
+        source_name = {
+            "wy": "网易云",
+            "qq": "QQ音乐",
+            "db": "B站",
+        }.get(item.source, item.source)
+
+        msg += f"{i}. {item.name} [{source_name}]"
+        if item.likes > 0:
+            msg += f" ❤️{item.likes}"
+        msg += f" - {item.user.name}\n"
+
+    await alisten_cmd.finish(msg.strip(), at_sender=True)
+
+
+@alisten_cmd.assign("music.delete")
+async def delete_music_handle(
+    name: str,
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """删除音乐"""
+    playlist_result = await api.get_playlist()
+    if isinstance(playlist_result, ErrorResponse):
+        await alisten_cmd.finish(playlist_result.error, at_sender=True)
+
+    if not playlist_result.playlist:
+        await alisten_cmd.finish("播放列表为空", at_sender=True)
+
+    for item in playlist_result.playlist[1:]:
+        if item.name == name:
+            music_id = item.id
+            break
+    else:
+        await alisten_cmd.finish("未找到指定音乐", at_sender=True)
+
+    result = await api.delete_music(music_id)
+
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
+
+    await alisten_cmd.finish(result.message, at_sender=True)
+
+
+@alisten_cmd.assign("music.good")
+async def good_music_handle(
+    name: str,
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """点赞音乐"""
+    playlist_result = await api.get_playlist()
+    if isinstance(playlist_result, ErrorResponse):
+        await alisten_cmd.finish(playlist_result.error, at_sender=True)
+
+    if not playlist_result.playlist:
+        await alisten_cmd.finish("播放列表为空", at_sender=True)
+
+    for i, item in enumerate(playlist_result.playlist, 1):
+        if item.name == name:
+            index = i
+            break
+    else:
+        await alisten_cmd.finish("未找到指定音乐", at_sender=True)
+
+    result = await api.good_music(index)
+
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
+
+    await alisten_cmd.finish(f"{result.message}，当前点赞数：{result.likes}", at_sender=True)
+
+
+@alisten_cmd.assign("music.skip")
+async def vote_skip_handle(
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """投票跳过"""
+    result = await api.vote_skip()
+
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
+    elif isinstance(result, VoteSkipResponse):
+        await alisten_cmd.finish(f"{result.message}，当前票数：{result.current_votes}/3", at_sender=True)
+    else:
+        await alisten_cmd.finish(result.message, at_sender=True)
+
+
+@alisten_cmd.assign("house.info")
 async def handle_house_info(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """获取当前房间的信息"""
     result = await api.house_info()
     if isinstance(result, ErrorResponse):
-        await alisten_config_cmd.finish(result.error)
+        await alisten_cmd.finish(result.error)
 
-    await alisten_config_cmd.finish(
+    await alisten_cmd.finish(
         f"当前房间信息:\n"
         f"房间ID: {result.id}\n"
         f"房间名称: {result.name}\n"
@@ -140,81 +316,24 @@ async def handle_house_info(
     )
 
 
-music_cmd = on_alconna(
-    Alconna(
-        "music",
-        Args["keywords?#音乐名称或信息", AllParam],
-        meta=CommandMeta(
-            description="通过 Alisten 服务点歌，支持多种音乐平台",
-            example="""/music Sagitta luminis               # 搜索并点歌（默认网易云音乐）
-/点歌 青花瓷                          # 使用中文别名点歌
-/music wy:夜曲                       # 指定网易云音乐
-/music qq:稻香                       # 指定QQ音乐
-/music BV1Xx411c7md                  # 直接使用Bilibili BV号
-
-支持的音乐源：
-• wy: 网易云音乐（默认）
-• qq: QQ音乐
-• db: Bilibili""",
-        ),
-    ),
-    aliases={"点歌"},
-    use_cmd_start=True,
-    block=True,
-    rule=Rule(is_group),
-)
-
-
-@music_cmd.handle()
-async def music_handle_first_receive(
-    keywords: Match[UniMessage],
-    config: AlistenConfig | None = Depends(get_config),
-):
-    # 首先检查是否有配置
-    if not config:
-        await music_cmd.finish(
-            "当前群组未配置 Alisten 服务\n请联系管理员使用 /alisten config set 命令进行配置",
-            at_sender=True,
-        )
-
-    if keywords.available:
-        music_cmd.set_path_arg("keywords", keywords.result)
-
-
-@music_cmd.got_path("keywords", prompt="你想听哪首歌呢？")
-async def music_handle(
-    keywords: UniMessage,
+@alisten_cmd.assign("house.users")
+async def house_users_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
-    """处理点歌请求"""
-    name = keywords.extract_plain_text().strip()
-    if not name:
-        await music_cmd.reject_path("keywords", "你想听哪首歌呢？")
+    """获取房间用户列表"""
+    result = await api.get_house_users()
 
-    source = "wy"  # 默认音乐源
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
 
-    # 解析特殊格式的输入
-    if ":" in name:
-        # 格式如 "wy:song_name" 或 "qq:song_name"
-        parts = name.split(":", 1)
-        if len(parts) == 2 and parts[0] in ["wy", "qq", "db"]:
-            source = parts[0]
-            name = parts[1]
-    elif name.startswith("BV"):
-        # Bilibili BV号
-        source = "db"
+    if not result.data:
+        await alisten_cmd.finish("房间内暂无用户", at_sender=True)
 
-    result = await api.pick_music(name=name, source=source)
+    msg = f"房间用户列表（共 {len(result.data)} 人）：\n"
+    for i, user in enumerate(result.data, 1):
+        msg += f"{i}. {user.name}"
+        if user.email:
+            msg += f" ({user.email})"
+        msg += "\n"
 
-    if isinstance(result, SuccessResponse):
-        msg = "点歌成功！歌曲已加入播放列表"
-        msg += f"\n歌曲：{result.data.name}"
-        source_name = {
-            "wy": "网易云音乐",
-            "qq": "QQ音乐",
-            "db": "Bilibili",
-        }.get(result.data.source, result.data.source)
-        msg += f"\n来源：{source_name}"
-        await music_cmd.finish(msg, at_sender=True)
-    else:
-        await music_cmd.finish(result.error, at_sender=True)
+    await alisten_cmd.finish(msg.strip(), at_sender=True)
