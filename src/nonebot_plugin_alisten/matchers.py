@@ -130,8 +130,7 @@ async def handle_house_info(
         f"房间ID: {result.id}\n"
         f"房间名称: {result.name}\n"
         f"房间描述: {result.desc}\n"
-        f"创建时间: {result.createTime.astimezone()}\n"
-        f"当前人数: {result.population}\n"
+        f"当前人数: {result.population}"
     )
 
 

@@ -97,15 +97,13 @@ class AlistenAPI:
             source=source,
         )
 
-        url = f"{self.config.server_url}/music/pick"
-
         try:
             driver = cast("HTTPClientMixin", get_driver())
 
             # 创建请求对象
             request = Request(
                 method="POST",
-                url=url,
+                url=f"{self.config.server_url}/music/pick",
                 headers={"Content-Type": "application/json"},
                 json=request_data.model_dump(),
             )
@@ -132,15 +130,13 @@ class AlistenAPI:
         Returns:
             房间列表或错误信息
         """
-        url = f"{self.config.server_url}/house/search"
-
         try:
             driver = cast("HTTPClientMixin", get_driver())
 
             # 创建请求对象
             request = Request(
                 method="GET",
-                url=url,
+                url=f"{self.config.server_url}/house/search",
                 headers={"Content-Type": "application/json"},
             )
 
