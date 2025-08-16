@@ -82,9 +82,7 @@ class AlistenAPI:
 
         Args:
             name: 音乐名称或搜索关键词
-            user_name: 用户昵称
             source: 音乐源 (wy/qq/db)
-            config: Alisten 配置
 
         Returns:
             点歌结果
@@ -109,8 +107,8 @@ class AlistenAPI:
             )
 
             response = await driver.request(request)
-            if response.content is None:
-                return ErrorResponse(error="响应内容为空")
+            if not response.content:
+                return ErrorResponse(error="响应内容为空，请稍后重试")
 
             if response.status_code == 200:
                 success_response = SuccessResponse.model_validate_json(response.content)
@@ -141,8 +139,8 @@ class AlistenAPI:
             )
 
             response = await driver.request(request)
-            if response.content is None:
-                return ErrorResponse(error="响应内容为空")
+            if not response.content:
+                return ErrorResponse(error="响应内容为空，请稍后重试")
 
             if response.status_code == 200:
                 house_response = HouseSearchResponse.model_validate_json(response.content)

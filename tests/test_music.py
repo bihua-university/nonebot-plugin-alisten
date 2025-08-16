@@ -4,8 +4,8 @@ import httpx
 import pytest
 import respx
 from inline_snapshot import snapshot
-from nonebot import get_adapter
-from nonebot.adapters.onebot.v11 import Adapter, Bot
+from nonebot import get_adapter, get_driver
+from nonebot.adapters.onebot.v11 import Adapter, Bot, Message, MessageSegment
 from nonebug import App
 
 from tests.fake import fake_group_message_event_v11, fake_private_message_event_v11
@@ -13,8 +13,6 @@ from tests.fake import fake_group_message_event_v11, fake_private_message_event_
 
 async def test_music_no_config(app: App):
     """测试没有配置的情况"""
-    from nonebot.adapters.onebot.v11 import Message
-
     from nonebot_plugin_alisten import music_cmd
 
     async with app.test_matcher() as ctx:
@@ -35,8 +33,6 @@ async def test_music_no_config(app: App):
 @respx.mock(assert_all_called=True)
 async def test_music_success(app: App, respx_mock: respx.MockRouter):
     """测试音乐点歌成功"""
-    from nonebot.adapters.onebot.v11 import Message
-
     from nonebot_plugin_alisten import music_cmd
 
     mocked_api = respx_mock.post("http://localhost:8080/music/pick").mock(
@@ -85,8 +81,6 @@ async def test_music_success(app: App, respx_mock: respx.MockRouter):
 @respx.mock(assert_all_called=True)
 async def test_music_failure(app: App, respx_mock: respx.MockRouter):
     """测试音乐点歌失败"""
-    from nonebot.adapters.onebot.v11 import Message
-
     from nonebot_plugin_alisten import music_cmd
 
     mocked_api = respx_mock.post("http://localhost:8080/music/pick").mock(
@@ -124,8 +118,6 @@ async def test_music_failure(app: App, respx_mock: respx.MockRouter):
 @respx.mock(assert_all_called=True)
 async def test_music_bilibili(app: App, respx_mock: respx.MockRouter):
     """测试 Bilibili BV 号点歌"""
-    from nonebot.adapters.onebot.v11 import Message
-
     from nonebot_plugin_alisten import music_cmd
 
     mocked_api = respx_mock.post("http://localhost:8080/music/pick").mock(
@@ -173,8 +165,6 @@ async def test_music_bilibili(app: App, respx_mock: respx.MockRouter):
 @respx.mock(assert_all_called=True)
 async def test_music_get_arg(app: App, respx_mock: respx.MockRouter):
     """测试交互式点歌"""
-    from nonebot.adapters.onebot.v11 import Message, MessageSegment
-
     from nonebot_plugin_alisten import music_cmd
 
     mocked_api = respx_mock.post("http://localhost:8080/music/pick").mock(
@@ -231,8 +221,6 @@ async def test_music_get_arg(app: App, respx_mock: respx.MockRouter):
 @respx.mock(assert_all_called=True)
 async def test_music_qq(app: App, respx_mock: respx.MockRouter):
     """测试 QQ 音乐点歌"""
-    from nonebot.adapters.onebot.v11 import Message
-
     from nonebot_plugin_alisten import music_cmd
 
     mocked_api = respx_mock.post("http://localhost:8080/music/pick").mock(
@@ -281,8 +269,6 @@ async def test_music_qq(app: App, respx_mock: respx.MockRouter):
 @respx.mock(assert_all_called=True)
 async def test_music_success_no_email(app: App, respx_mock: respx.MockRouter):
     """测试音乐点歌，没有邮箱的情况"""
-    from nonebot.adapters.onebot.v11 import Message
-
     from nonebot_plugin_alisten import music_cmd
 
     mocked_api = respx_mock.post("http://localhost:8080/music/pick").mock(
@@ -329,8 +315,6 @@ async def test_music_success_no_email(app: App, respx_mock: respx.MockRouter):
 
 async def test_music_private(app: App):
     """测试私聊场景"""
-    from nonebot.adapters.onebot.v11 import Message
-
     from nonebot_plugin_alisten import music_cmd
 
     async with app.test_matcher() as ctx:
@@ -340,3 +324,44 @@ async def test_music_private(app: App):
         event = fake_private_message_event_v11(message=Message("/music test"))
         ctx.receive_event(bot, event)
         ctx.should_not_pass_rule(music_cmd)
+
+
+@pytest.mark.usefixtures("_configs")
+@respx.mock(assert_all_called=True)
+async def test_music_api_response_content_none(app: App, respx_mock: respx.MockRouter):
+    """通过 matcher 发送 /music，当后端返回空 content 时，应由 matcher 返回通用错误信息"""
+    from nonebot_plugin_alisten import music_cmd
+
+    # 模拟后端返回空 content
+    respx_mock.post("http://localhost:8080/music/pick").mock(return_value=httpx.Response(status_code=200, content=None))
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+        event = fake_group_message_event_v11(message=Message("/music test"))
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event=event, message="响应内容为空，请稍后重试", at_sender=True)
+        ctx.should_finished(music_cmd)
+
+
+@pytest.mark.usefixtures("_configs")
+async def test_music_api_request_exception(app: App, monkeypatch: pytest.MonkeyPatch):
+    """当 driver.request 抛异常时，通过 matcher 点歌应返回通用错误信息"""
+    from nonebot_plugin_alisten import music_cmd
+
+    # patch driver.request 抛异常
+    driver = get_driver()
+
+    async def fake_request(_):
+        raise RuntimeError("network error")
+
+    monkeypatch.setattr(driver, "request", fake_request)
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+
+        event = fake_group_message_event_v11(message=Message("/music test"))
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event=event, message="请求失败，请稍后重试", at_sender=True)
+        ctx.should_finished(music_cmd)

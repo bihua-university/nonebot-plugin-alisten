@@ -1,7 +1,7 @@
 import httpx
 import pytest
 import respx
-from nonebot import get_adapter
+from nonebot import get_adapter, get_driver
 from nonebot.adapters.onebot.v11 import Adapter, Bot, Message
 from nonebug import App
 
@@ -82,4 +82,47 @@ async def test_house_info_not_exist(app: App, respx_mock: respx.MockRouter):
         event = fake_group_message_event_v11(message=Message("/alisten house info"))
         ctx.receive_event(bot, event)
         ctx.should_call_send(event, "未找到房间ID为 room123 的房间")
+        ctx.should_finished(alisten_config_cmd)
+
+
+@pytest.mark.usefixtures("_configs")
+@respx.mock(assert_all_called=True)
+async def test_house_search_response_content_none(app: App, respx_mock: respx.MockRouter):
+    """通过 /alisten house info 测试当后端返回空 content 时的异常处理"""
+    from nonebot_plugin_alisten import alisten_config_cmd
+
+    respx_mock.get("http://localhost:8080/house/search").mock(
+        return_value=httpx.Response(status_code=200, content=None)
+    )
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+
+        event = fake_group_message_event_v11(message=Message("/alisten house info"))
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event=event, message="响应内容为空，请稍后重试")
+        ctx.should_finished(alisten_config_cmd)
+
+
+@pytest.mark.usefixtures("_configs")
+async def test_house_search_request_exception(app: App, monkeypatch: pytest.MonkeyPatch):
+    """当 driver.request 抛异常时，通过 matcher 查询房间信息应返回通用错误信息"""
+    from nonebot_plugin_alisten import alisten_config_cmd
+
+    # patch driver.request 抛异常
+    driver = get_driver()
+
+    async def fake_request(_):
+        raise RuntimeError("network error")
+
+    monkeypatch.setattr(driver, "request", fake_request)
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+
+        event = fake_group_message_event_v11(message=Message("/alisten house info"))
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event=event, message="房间搜索请求失败，请稍后重试")
         ctx.should_finished(alisten_config_cmd)
