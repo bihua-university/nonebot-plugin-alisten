@@ -80,10 +80,7 @@ async def test_config_show_with_config(app: App):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
-        event = fake_group_message_event_v11(
-            message=Message("/alisten config show"),
-            sender_id=10,  # 超级用户
-        )
+        event = fake_group_message_event_v11(message=Message("/alisten config show"))
         ctx.receive_event(bot, event)
         ctx.should_call_send(
             event,
@@ -100,10 +97,7 @@ async def test_config_show_no_config(app: App):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
-        event = fake_group_message_event_v11(
-            message=Message("/alisten config show"),
-            sender_id=10,  # 超级用户
-        )
+        event = fake_group_message_event_v11(message=Message("/alisten config show"))
         ctx.receive_event(bot, event)
         ctx.should_call_send(event, "当前群组未配置 Alisten 服务")
         ctx.should_finished(alisten_config_cmd)
@@ -162,12 +156,12 @@ async def test_config_permission_denied(app: App):
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
         event = fake_group_message_event_v11(
-            message=Message("/alisten config show"),
+            message=Message("/alisten config delete"),
             user_id=10000,  # 普通用户
         )
         ctx.receive_event(bot, event)
-        # 权限检查失败，不会处理消息
-        ctx.should_not_pass_permission(alisten_config_cmd)
+        ctx.should_call_send(event, "权限不足，仅限超级用户使用")
+        ctx.should_finished(alisten_config_cmd)
 
 
 async def test_config_private(app: App):
