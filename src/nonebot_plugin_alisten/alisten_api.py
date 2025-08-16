@@ -1,5 +1,6 @@
 """Alisten 服务器 API 客户端"""
 
+from datetime import datetime
 from typing import cast
 
 from nonebot import get_driver
@@ -49,6 +50,26 @@ class ErrorResponse(BaseModel):
     error: str
 
 
+class HouseInfo(BaseModel):
+    """房间信息"""
+
+    createTime: datetime
+    desc: str
+    enableStatus: bool
+    id: str
+    name: str
+    needPwd: bool
+    population: int
+
+
+class HouseSearchResponse(BaseModel):
+    """房间搜索响应"""
+
+    code: str
+    data: list[HouseInfo]
+    message: str
+
+
 class AlistenAPI:
     """Alisten API 客户端"""
 
@@ -76,15 +97,13 @@ class AlistenAPI:
             source=source,
         )
 
-        url = f"{self.config.server_url}/music/pick"
-
         try:
             driver = cast("HTTPClientMixin", get_driver())
 
             # 创建请求对象
             request = Request(
                 method="POST",
-                url=url,
+                url=f"{self.config.server_url}/music/pick",
                 headers={"Content-Type": "application/json"},
                 json=request_data.model_dump(),
             )
@@ -104,3 +123,55 @@ class AlistenAPI:
         except Exception:
             logger.exception("Alisten API 请求失败")
             return ErrorResponse(error="请求失败，请稍后重试")
+
+    async def house_search(self) -> HouseSearchResponse | ErrorResponse:
+        """搜索房间列表
+
+        Returns:
+            房间列表或错误信息
+        """
+        try:
+            driver = cast("HTTPClientMixin", get_driver())
+
+            # 创建请求对象
+            request = Request(
+                method="GET",
+                url=f"{self.config.server_url}/house/search",
+                headers={"Content-Type": "application/json"},
+            )
+
+            response = await driver.request(request)
+            if response.content is None:
+                return ErrorResponse(error="响应内容为空")
+
+            if response.status_code == 200:
+                house_response = HouseSearchResponse.model_validate_json(response.content)
+                return house_response
+            else:
+                error_response = ErrorResponse.model_validate_json(response.content)
+                return error_response
+
+        except Exception:
+            logger.exception("Alisten API 房间搜索请求失败")
+            return ErrorResponse(error="房间搜索请求失败，请稍后重试")
+
+    async def house_info(self) -> HouseInfo | ErrorResponse:
+        """获取当前配置房间的信息
+
+        Returns:
+            房间信息或错误信息
+        """
+        # 先获取房间列表
+        search_result = await self.house_search()
+
+        # 如果获取房间列表失败，直接返回错误
+        if isinstance(search_result, ErrorResponse):
+            return search_result
+
+        # 在房间列表中查找匹配的房间
+        for house in search_result.data:
+            if house.id == self.config.house_id:
+                return house
+
+        # 如果没有找到匹配的房间，返回错误
+        return ErrorResponse(error=f"未找到房间ID为 {self.config.house_id} 的房间")

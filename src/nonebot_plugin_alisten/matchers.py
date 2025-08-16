@@ -6,7 +6,7 @@ from nonebot_plugin_alconna import Alconna, Args, CommandMeta, Match, Subcommand
 from nonebot_plugin_orm import async_scoped_session
 from nonebot_plugin_user import UserSession
 
-from .alisten_api import AlistenAPI, SuccessResponse
+from .alisten_api import AlistenAPI, ErrorResponse, SuccessResponse
 from .depends import get_alisten_api, get_config
 from .models import AlistenConfig
 
@@ -30,6 +30,11 @@ alisten_config_cmd = on_alconna(
             Subcommand("show", help_text="显示当前群组的 Alisten 配置信息"),
             Subcommand("delete", help_text="删除当前群组的 Alisten 配置"),
             help_text="管理 Alisten 音乐服务器的配置",
+        ),
+        Subcommand(
+            "house",
+            Subcommand("info", help_text="显示当前房间的信息"),
+            help_text="管理 Alisten 房间",
         ),
         meta=CommandMeta(
             description="Alisten 音乐服务器配置管理（仅限超级用户）",
@@ -109,6 +114,24 @@ async def handle_config_delete(
     await db_session.commit()
 
     await alisten_config_cmd.finish("Alisten 配置已删除")
+
+
+@alisten_config_cmd.assign("house.info")
+async def handle_house_info(
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """获取当前房间的信息"""
+    result = await api.house_info()
+    if isinstance(result, ErrorResponse):
+        await alisten_config_cmd.finish(result.error)
+
+    await alisten_config_cmd.finish(
+        f"当前房间信息:\n"
+        f"房间ID: {result.id}\n"
+        f"房间名称: {result.name}\n"
+        f"房间描述: {result.desc}\n"
+        f"当前人数: {result.population}"
+    )
 
 
 music_cmd = on_alconna(
