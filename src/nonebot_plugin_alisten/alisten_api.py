@@ -226,9 +226,10 @@ class AlistenAPI:
         return ErrorResponse(error=f"未找到房间ID为 {self.config.house_id} 的房间")
 
     async def pick_music(self, id: str, name: str, source: str) -> PickMusicResponse | ErrorResponse:
-        """点歌
+        """点歌. 可通过 ID 或名称点歌
 
         Args:
+            id: 音乐 ID
             name: 音乐名称或搜索关键词
             source: 音乐源 (wy/qq/db)
 

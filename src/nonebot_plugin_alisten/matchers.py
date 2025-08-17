@@ -78,6 +78,7 @@ alisten_cmd = on_alconna(
         meta=CommandMeta(
             description="听歌房管理",
             example="""/alisten music pick 青花瓷                 # 点歌并加入播放列表
+/alisten music pick --id 30621776               # 通过 ID 点歌
 /alisten music playlist                         # 查看播放列表
 /alisten music delete 青花瓷                    # 从播放列表删除音乐
 /alisten music good 青花瓷                      # 为音乐点赞
