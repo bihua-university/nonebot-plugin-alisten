@@ -1,7 +1,7 @@
 """Alisten 服务器 API 客户端"""
 
 from datetime import datetime
-from typing import cast
+from typing import TypeVar, cast
 
 from nonebot import get_driver
 from nonebot.drivers import HTTPClientMixin, Request
@@ -10,6 +10,21 @@ from nonebot_plugin_user import UserSession
 from pydantic import BaseModel
 
 from .models import AlistenConfig
+
+# 定义泛型类型
+T = TypeVar("T", bound=BaseModel)
+
+
+class ErrorResponse(BaseModel):
+    """错误响应"""
+
+    error: str
+
+
+class MessageResponse(BaseModel):
+    """消息响应"""
+
+    message: str
 
 
 class User(BaseModel):
@@ -36,18 +51,12 @@ class MusicData(BaseModel):
     id: str
 
 
-class SuccessResponse(BaseModel):
-    """成功响应"""
+class PickMusicResponse(BaseModel):
+    """点歌响应"""
 
     code: str
     message: str
     data: MusicData
-
-
-class ErrorResponse(BaseModel):
-    """错误响应"""
-
-    error: str
 
 
 class HouseInfo(BaseModel):
@@ -70,6 +79,81 @@ class HouseSearchResponse(BaseModel):
     message: str
 
 
+class DeleteMusicRequest(BaseModel):
+    """删除音乐请求"""
+
+    houseId: str
+    housePwd: str = ""
+    id: str
+
+
+class PlaylistRequest(BaseModel):
+    """获取播放列表请求"""
+
+    houseId: str
+    housePwd: str = ""
+
+
+class PlaylistItem(BaseModel):
+    """播放列表项"""
+
+    name: str
+    source: str
+    id: str
+    likes: int
+    user: User
+
+
+class PlaylistResponse(BaseModel):
+    """播放列表响应"""
+
+    playlist: list[PlaylistItem] | None = None
+
+
+class HouseUserRequest(BaseModel):
+    """获取房间用户请求"""
+
+    houseId: str
+    housePwd: str = ""
+
+
+class HouseUserResponse(BaseModel):
+    """房间用户列表响应"""
+
+    data: list[User] | None = None
+
+
+class VoteSkipRequest(BaseModel):
+    """投票跳过请求"""
+
+    houseId: str
+    housePwd: str = ""
+    user: User
+
+
+class VoteSkipResponse(BaseModel):
+    """投票跳过响应"""
+
+    message: str
+    current_votes: int | None = None
+
+
+class GoodMusicRequest(BaseModel):
+    """点赞音乐请求"""
+
+    houseId: str
+    housePwd: str = ""
+    index: int
+    name: str
+
+
+class GoodMusicResponse(BaseModel):
+    """点赞音乐响应"""
+
+    message: str
+    likes: int
+
+
 class AlistenAPI:
     """Alisten API 客户端"""
 
@@ -77,7 +161,71 @@ class AlistenAPI:
         self.config = config
         self.session = session
 
-    async def pick_music(self, name: str, source: str) -> SuccessResponse | ErrorResponse:
+    async def _make_request(
+        self, method: str, endpoint: str, response_type: type[T], error_msg: str, json_data: dict | None = None
+    ) -> T | ErrorResponse:
+        """通用的API请求处理方法
+
+        Args:
+            method: HTTP方法 (GET/POST)
+            endpoint: API端点
+            response_type: 期望的响应类型
+            error_msg: 错误时的提示信息
+            json_data: POST请求的JSON数据
+
+        Returns:
+            成功时返回指定类型的响应，失败时返回ErrorResponse
+        """
+        try:
+            driver = cast("HTTPClientMixin", get_driver())
+
+            headers = {"Content-Type": "application/json"}
+            request = Request(
+                method=method,
+                url=f"{self.config.server_url}{endpoint}",
+                headers=headers,
+                json=json_data,
+            )
+
+            response = await driver.request(request)
+            if not response.content:
+                return ErrorResponse(error="响应内容为空，请稍后重试")
+
+            if response.status_code == 200:
+                return response_type.model_validate_json(response.content)
+            else:
+                return ErrorResponse.model_validate_json(response.content)
+
+        except Exception:
+            logger.exception(f"Alisten API {error_msg}")
+            return ErrorResponse(error=f"{error_msg}，请稍后重试")
+
+    async def house_info(self) -> HouseInfo | ErrorResponse:
+        """获取当前配置房间的信息
+
+        Returns:
+            房间信息或错误信息
+        """
+        # 先获取房间列表
+        search_result = await self.house_search()
+
+        # 如果获取房间列表失败，直接返回错误
+        if isinstance(search_result, ErrorResponse):
+            return search_result
+
+        # 检查房间列表是否为空
+        if not search_result.data:
+            return ErrorResponse(error="未找到任何房间")
+
+        # 在房间列表中查找匹配的房间
+        for house in search_result.data:
+            if house.id == self.config.house_id:
+                return house
+
+        # 如果没有找到匹配的房间，返回错误
+        return ErrorResponse(error=f"未找到房间ID为 {self.config.house_id} 的房间")
+
+    async def pick_music(self, name: str, source: str) -> PickMusicResponse | ErrorResponse:
         """点歌
 
         Args:
@@ -95,32 +243,13 @@ class AlistenAPI:
             source=source,
         )
 
-        try:
-            driver = cast("HTTPClientMixin", get_driver())
-
-            # 创建请求对象
-            request = Request(
-                method="POST",
-                url=f"{self.config.server_url}/music/pick",
-                headers={"Content-Type": "application/json"},
-                json=request_data.model_dump(),
-            )
-
-            response = await driver.request(request)
-            if not response.content:
-                return ErrorResponse(error="响应内容为空，请稍后重试")
-
-            if response.status_code == 200:
-                success_response = SuccessResponse.model_validate_json(response.content)
-                return success_response
-
-            else:
-                error_response = ErrorResponse.model_validate_json(response.content)
-                return error_response
-
-        except Exception:
-            logger.exception("Alisten API 请求失败")
-            return ErrorResponse(error="请求失败，请稍后重试")
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/pick",
+            response_type=PickMusicResponse,
+            error_msg="点歌请求失败",
+            json_data=request_data.model_dump(),
+        )
 
     async def house_search(self) -> HouseSearchResponse | ErrorResponse:
         """搜索房间列表
@@ -128,48 +257,114 @@ class AlistenAPI:
         Returns:
             房间列表或错误信息
         """
-        try:
-            driver = cast("HTTPClientMixin", get_driver())
+        return await self._make_request(
+            method="GET",
+            endpoint="/house/search",
+            response_type=HouseSearchResponse,
+            error_msg="房间搜索请求失败",
+        )
 
-            # 创建请求对象
-            request = Request(
-                method="GET",
-                url=f"{self.config.server_url}/house/search",
-                headers={"Content-Type": "application/json"},
-            )
+    async def delete_music(self, id: str) -> MessageResponse | ErrorResponse:
+        """删除音乐
 
-            response = await driver.request(request)
-            if not response.content:
-                return ErrorResponse(error="响应内容为空，请稍后重试")
-
-            if response.status_code == 200:
-                house_response = HouseSearchResponse.model_validate_json(response.content)
-                return house_response
-            else:
-                error_response = ErrorResponse.model_validate_json(response.content)
-                return error_response
-
-        except Exception:
-            logger.exception("Alisten API 房间搜索请求失败")
-            return ErrorResponse(error="房间搜索请求失败，请稍后重试")
-
-    async def house_info(self) -> HouseInfo | ErrorResponse:
-        """获取当前配置房间的信息
+        Args:
+            id: 要删除的音乐ID
 
         Returns:
-            房间信息或错误信息
+            删除结果
         """
-        # 先获取房间列表
-        search_result = await self.house_search()
+        request_data = DeleteMusicRequest(
+            houseId=self.config.house_id,
+            housePwd=self.config.house_password,
+            id=id,
+        )
 
-        # 如果获取房间列表失败，直接返回错误
-        if isinstance(search_result, ErrorResponse):
-            return search_result
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/delete",
+            response_type=MessageResponse,
+            error_msg="删除音乐请求失败",
+            json_data=request_data.model_dump(),
+        )
 
-        # 在房间列表中查找匹配的房间
-        for house in search_result.data:
-            if house.id == self.config.house_id:
-                return house
+    async def good_music(self, index: int) -> GoodMusicResponse | ErrorResponse:
+        """点赞音乐
 
-        # 如果没有找到匹配的房间，返回错误
-        return ErrorResponse(error=f"未找到房间ID为 {self.config.house_id} 的房间")
+        Args:
+            index: 音乐在播放列表中的索引位置（从1开始）
+
+        Returns:
+            点赞结果
+        """
+        request_data = GoodMusicRequest(
+            houseId=self.config.house_id,
+            housePwd=self.config.house_password,
+            index=index,
+            name="",
+        )
+
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/good",
+            response_type=GoodMusicResponse,
+            error_msg="点赞音乐请求失败",
+            json_data=request_data.model_dump(),
+        )
+
+    async def vote_skip(self) -> VoteSkipResponse | ErrorResponse:
+        """投票跳过当前歌曲
+
+        Returns:
+            投票结果
+        """
+        request_data = VoteSkipRequest(
+            houseId=self.config.house_id,
+            housePwd=self.config.house_password,
+            user=User(name=self.session.user_name, email=self.session.user_email or ""),
+        )
+
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/skip/vote",
+            response_type=VoteSkipResponse,
+            error_msg="投票跳过请求失败",
+            json_data=request_data.model_dump(),
+        )
+
+    async def get_playlist(self) -> PlaylistResponse | ErrorResponse:
+        """获取当前播放列表
+
+        Returns:
+            播放列表
+        """
+        request_data = PlaylistRequest(
+            houseId=self.config.house_id,
+            housePwd=self.config.house_password,
+        )
+
+        return await self._make_request(
+            method="GET",
+            endpoint="/music/playlist",
+            response_type=PlaylistResponse,
+            error_msg="获取播放列表请求失败",
+            json_data=request_data.model_dump(),
+        )
+
+    async def get_house_user(self) -> HouseUserResponse | ErrorResponse:
+        """获取房间用户列表
+
+        Returns:
+            房间用户列表
+        """
+        request_data = HouseUserRequest(
+            houseId=self.config.house_id,
+            housePwd=self.config.house_password,
+        )
+
+        return await self._make_request(
+            method="GET",
+            endpoint="/house/houseuser",
+            response_type=HouseUserResponse,
+            error_msg="获取房间用户请求失败",
+            json_data=request_data.model_dump(),
+        )
