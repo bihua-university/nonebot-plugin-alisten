@@ -53,6 +53,33 @@ async def test_house_info(app: App, respx_mock: respx.MockRouter):
 
 @pytest.mark.usefixtures("_configs")
 @respx.mock(assert_all_called=True)
+async def test_house_empty(app: App, respx_mock: respx.MockRouter):
+    """测试房间列表为空"""
+    from nonebot_plugin_alisten import alisten_cmd
+
+    respx_mock.get("http://localhost:8080/house/search").mock(
+        return_value=httpx.Response(
+            status_code=200,
+            json={
+                "code": "20000",
+                "data": [],
+                "message": "房间列表",
+            },
+        )
+    )
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+
+        event = fake_group_message_event_v11(message=Message("/alisten house info"))
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(event, "未找到任何房间")
+        ctx.should_finished(alisten_cmd)
+
+
+@pytest.mark.usefixtures("_configs")
+@respx.mock(assert_all_called=True)
 async def test_house_info_not_exist(app: App, respx_mock: respx.MockRouter):
     """测试房间信息"""
     from nonebot_plugin_alisten import alisten_cmd
