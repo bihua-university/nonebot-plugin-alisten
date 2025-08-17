@@ -61,7 +61,7 @@ alisten_cmd = on_alconna(
                 Args["server_url", str]["house_id", str]["house_password?", str],
                 help_text="设置 Alisten 服务器配置，包括服务器地址、房间ID和可选的房间密码",
             ),
-            Subcommand("show", help_text="显示当前群组的 Alisten 配置信息"),
+            Subcommand("show", help_text="显示当前群组的 Alisten 配置"),
             Subcommand("delete", help_text="删除当前群组的 Alisten 配置"),
             help_text="管理 Alisten 音乐服务器的配置",
         ),
@@ -72,11 +72,20 @@ alisten_cmd = on_alconna(
             help_text="管理 Alisten 房间",
         ),
         meta=CommandMeta(
-            description="Alisten 音乐服务器配置管理（仅限超级用户）",
-            example="""/alisten config set http://localhost:8080 room123 password123  # 设置完整配置
+            description="Alisten 音乐服务管理",
+            example="""/alisten music pick 青花瓷                           # 点歌
+/alisten music playlist                               # 查看播放列表
+/alisten music delete 青花瓷                          # 删除音乐
+/alisten music good 青花瓷                            # 点赞音乐
+/alisten music skip                                   # 投票跳过
+
+/alisten house info                                   # 查看房间信息
+/alisten house user                                   # 查看房间用户
+
+/alisten config set http://localhost:8080 room123 password123  # 设置完整配置
 /alisten config set https://music.example.com myroom          # 设置配置（无密码）
-/alisten config show                                          # 查看当前配置
-/alisten config delete                                        # 删除配置""",
+/alisten config show                                           # 查看当前配置
+/alisten config delete                                         # 删除配置""",
         ),
     ),
     use_cmd_start=True,
@@ -85,6 +94,10 @@ alisten_cmd = on_alconna(
 )
 alisten_cmd.shortcut("music", {"command": "alisten music pick", "prefix": True})
 alisten_cmd.shortcut("点歌", {"command": "alisten music pick", "prefix": True})
+alisten_cmd.shortcut("播放列表", {"command": "alisten music playlist", "prefix": True})
+alisten_cmd.shortcut("点赞", {"command": "alisten music good", "prefix": True})
+alisten_cmd.shortcut("切歌", {"command": "alisten music skip", "prefix": True})
+alisten_cmd.shortcut("删除音乐", {"command": "alisten music delete", "prefix": True})
 
 
 @alisten_cmd.assign("music.pick")
@@ -177,7 +190,7 @@ async def handle_config_set(
     )
 
 
-@alisten_cmd.assign("config.show")
+@alisten_cmd.assign("config.show", parameterless=[Depends(ensure_superuser)])
 async def handle_config_show(config: AlistenConfig | None = Depends(get_config)):
     """显示当前配置"""
     if not config:
