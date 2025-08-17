@@ -184,7 +184,7 @@ async def test_house_user(app: App, respx_mock: respx.MockRouter):
         ctx.receive_event(bot, event)
         ctx.should_call_send(
             event=event,
-            message="房间用户列表（共 2 人）：\n1. user1 (user1@example.com)\n2. user2",
+            message="房间用户列表（共 2 人）：\n1. user1\n2. user2",
             at_sender=True,
         )
         ctx.should_finished(alisten_cmd)

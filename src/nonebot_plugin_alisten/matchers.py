@@ -352,8 +352,6 @@ async def house_users_handle(
     msg = f"房间用户列表（共 {len(result.data)} 人）：\n"
     for i, user in enumerate(result.data, 1):
         msg += f"{i}. {user.name}"
-        if user.email:
-            msg += f" ({user.email})"
         msg += "\n"
 
     await alisten_cmd.finish(msg.strip(), at_sender=True)
