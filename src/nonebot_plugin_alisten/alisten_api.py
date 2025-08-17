@@ -343,7 +343,7 @@ class AlistenAPI:
         )
 
         return await self._make_request(
-            method="POST",
+            method="GET",
             endpoint="/music/playlist",
             response_type=PlaylistResponse,
             error_msg="获取播放列表请求失败",
@@ -362,7 +362,7 @@ class AlistenAPI:
         )
 
         return await self._make_request(
-            method="POST",
+            method="GET",
             endpoint="/house/houseuser",
             response_type=HouseUserResponse,
             error_msg="获取房间用户请求失败",

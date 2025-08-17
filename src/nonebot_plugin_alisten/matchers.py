@@ -21,7 +21,6 @@ from .alisten_api import (
     AlistenAPI,
     ErrorResponse,
     PickMusicResponse,
-    VoteSkipResponse,
 )
 from .depends import get_alisten_api, get_config
 from .models import AlistenConfig
@@ -49,8 +48,8 @@ alisten_cmd = on_alconna(
                 help_text=("点歌：按名称、BV号或指定平台搜索并点歌"),
             ),
             Subcommand("playlist", help_text="查看当前房间播放列表"),
-            Subcommand("delete", Args["name#要删除的音乐名称", str], help_text="从播放列表中删除指定音乐"),
-            Subcommand("good", Args["name#要点赞的音乐名称", str], help_text="为播放列表中的音乐点赞"),
+            Subcommand("delete", Args["name#要删除的音乐名称", AllParam], help_text="从播放列表中删除指定音乐"),
+            Subcommand("good", Args["name#要点赞的音乐名称", AllParam], help_text="为播放列表中的音乐点赞"),
             Subcommand("skip", help_text="发起投票跳过当前音乐"),
             help_text="音乐管理",
         ),
@@ -250,7 +249,7 @@ async def playlist_handle(
 
 @alisten_cmd.assign("music.delete")
 async def delete_music_handle(
-    name: str,
+    name: UniMessage,
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """删除音乐"""
@@ -262,7 +261,7 @@ async def delete_music_handle(
         await alisten_cmd.finish("播放列表为空", at_sender=True)
 
     for item in playlist_result.playlist[1:]:
-        if item.name == name:
+        if item.name == name.extract_plain_text().strip():
             music_id = item.id
             break
     else:
@@ -278,7 +277,7 @@ async def delete_music_handle(
 
 @alisten_cmd.assign("music.good")
 async def good_music_handle(
-    name: str,
+    name: UniMessage,
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """点赞音乐"""
@@ -290,7 +289,7 @@ async def good_music_handle(
         await alisten_cmd.finish("播放列表为空", at_sender=True)
 
     for i, item in enumerate(playlist_result.playlist, 1):
-        if item.name == name:
+        if item.name == name.extract_plain_text().strip():
             index = i
             break
     else:
@@ -313,7 +312,7 @@ async def vote_skip_handle(
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
-    elif isinstance(result, VoteSkipResponse):
+    elif result.current_votes is not None:
         await alisten_cmd.finish(f"{result.message}，当前票数：{result.current_votes}/3", at_sender=True)
     else:
         await alisten_cmd.finish(result.message, at_sender=True)
@@ -337,7 +336,7 @@ async def handle_house_info(
     )
 
 
-@alisten_cmd.assign("house.users")
+@alisten_cmd.assign("house.user")
 async def house_users_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
