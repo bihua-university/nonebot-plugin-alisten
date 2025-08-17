@@ -3,7 +3,17 @@ from nonebot.matcher import Matcher
 from nonebot.params import Depends
 from nonebot.permission import SuperUser
 from nonebot.rule import Rule
-from nonebot_plugin_alconna import Alconna, Args, CommandMeta, Match, Subcommand, UniMessage, on_alconna
+from nonebot_plugin_alconna import (
+    Alconna,
+    Args,
+    Check,
+    CommandMeta,
+    Match,
+    Subcommand,
+    UniMessage,
+    match_path,
+    on_alconna,
+)
 from nonebot_plugin_orm import async_scoped_session
 from nonebot_plugin_user import UserSession
 
@@ -74,26 +84,24 @@ alisten_cmd = on_alconna(
     rule=Rule(is_group),
 )
 
-music_pick_cmd = alisten_cmd.dispatch("music.pick")
 
-
-@music_pick_cmd.handle()
+@alisten_cmd.assign("music.pick")
 async def music_pick_handle_first_receive(
     keywords: Match[UniMessage],
     config: AlistenConfig | None = Depends(get_config),
 ):
     # 首先检查是否有配置
     if not config:
-        await music_pick_cmd.finish(
+        await alisten_cmd.finish(
             "当前群组未配置 Alisten 服务\n请联系管理员使用 /alisten config set 命令进行配置",
             at_sender=True,
         )
 
     if keywords.available:
-        music_pick_cmd.set_path_arg("~keywords", keywords.result)
+        alisten_cmd.set_path_arg("music.pick.keywords", keywords.result)
 
 
-@music_pick_cmd.got_path("~keywords", prompt="你想听哪首歌呢？")
+@alisten_cmd.got_path("music.pick.keywords", prompt="你想听哪首歌呢？", parameterless=[Check(match_path("music.pick"))])
 async def music_pick_handle(
     keywords: UniMessage,
     api: AlistenAPI = Depends(get_alisten_api),
@@ -101,7 +109,7 @@ async def music_pick_handle(
     """处理点歌请求"""
     name = keywords.extract_plain_text().strip()
     if not name:
-        await music_pick_cmd.reject_path("~keywords", "你想听哪首歌呢？")
+        await alisten_cmd.reject_path("music.pick.keywords", "你想听哪首歌呢？")
 
     source = "wy"  # 默认音乐源
 
@@ -127,12 +135,11 @@ async def music_pick_handle(
             "db": "Bilibili",
         }.get(result.data.source, result.data.source)
         msg += f"\n来源：{source_name}"
-        await music_pick_cmd.finish(msg, at_sender=True)
+        await alisten_cmd.finish(msg, at_sender=True)
     else:
-        await music_pick_cmd.finish(result.error, at_sender=True)
+        await alisten_cmd.finish(result.error, at_sender=True)
 
 
-# 配置管理命令处理
 @alisten_cmd.assign("config.set", parameterless=[Depends(ensure_superuser)])
 async def handle_config_set(
     user: UserSession,
@@ -197,7 +204,6 @@ async def handle_config_delete(
     await alisten_cmd.finish("Alisten 配置已删除")
 
 
-# 播放列表命令处理
 @alisten_cmd.assign("music.playlist")
 async def playlist_handle(
     api: AlistenAPI = Depends(get_alisten_api),

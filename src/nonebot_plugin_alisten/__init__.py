@@ -35,6 +35,5 @@ __plugin_meta__ = PluginMetadata(
 driver = get_driver()
 if isinstance(driver, HTTPClientMixin):
     from .matchers import alisten_cmd as alisten_cmd
-    from .matchers import music_pick_cmd as music_pick_cmd
 else:
     logger.warning("当前驱动器不支持 HTTP 客户端功能，插件已禁用")
