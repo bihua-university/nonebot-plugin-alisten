@@ -225,7 +225,7 @@ class AlistenAPI:
         # 如果没有找到匹配的房间，返回错误
         return ErrorResponse(error=f"未找到房间ID为 {self.config.house_id} 的房间")
 
-    async def pick_music(self, name: str, source: str) -> PickMusicResponse | ErrorResponse:
+    async def pick_music(self, id: str, name: str, source: str) -> PickMusicResponse | ErrorResponse:
         """点歌
 
         Args:
@@ -239,6 +239,7 @@ class AlistenAPI:
             houseId=self.config.house_id,
             housePwd=self.config.house_password,
             user=User(name=self.user_session.user_name, email=self.user_session.user_email or ""),
+            id=id,
             name=name,
             source=source,
         )
