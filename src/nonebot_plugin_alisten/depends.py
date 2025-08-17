@@ -7,9 +7,9 @@ from .alisten_api import AlistenAPI
 from .models import AlistenConfig
 
 
-async def get_config(user: UserSession, db_session: async_scoped_session) -> AlistenConfig | None:
+async def get_config(user_session: UserSession, db_session: async_scoped_session) -> AlistenConfig | None:
     """获取 Alisten 配置"""
-    stmt = select(AlistenConfig).where(AlistenConfig.session_id == user.session_id)
+    stmt = select(AlistenConfig).where(AlistenConfig.session_id == user_session.session_id)
     result = await db_session.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -20,4 +20,4 @@ async def get_alisten_api(
 ) -> AlistenAPI | None:
     """获取 Alisten API 实例"""
     if config:
-        return AlistenAPI(config=config, session=session)
+        return AlistenAPI(config=config, user_session=session)

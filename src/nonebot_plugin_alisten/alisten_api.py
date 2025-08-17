@@ -157,9 +157,9 @@ class GoodMusicResponse(BaseModel):
 class AlistenAPI:
     """Alisten API 客户端"""
 
-    def __init__(self, config: AlistenConfig, session: UserSession):
+    def __init__(self, config: AlistenConfig, user_session: UserSession):
         self.config = config
-        self.session = session
+        self.user_session = user_session
 
     async def _make_request(
         self, method: str, endpoint: str, response_type: type[T], error_msg: str, json_data: dict | None = None
@@ -238,7 +238,7 @@ class AlistenAPI:
         request_data = PickMusicRequest(
             houseId=self.config.house_id,
             housePwd=self.config.house_password,
-            user=User(name=self.session.user_name, email=self.session.user_email or ""),
+            user=User(name=self.user_session.user_name, email=self.user_session.user_email or ""),
             name=name,
             source=source,
         )
@@ -320,7 +320,7 @@ class AlistenAPI:
         request_data = VoteSkipRequest(
             houseId=self.config.house_id,
             housePwd=self.config.house_password,
-            user=User(name=self.session.user_name, email=self.session.user_email or ""),
+            user=User(name=self.user_session.user_name, email=self.user_session.user_email or ""),
         )
 
         return await self._make_request(

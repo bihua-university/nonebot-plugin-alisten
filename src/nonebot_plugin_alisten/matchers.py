@@ -26,9 +26,9 @@ from .depends import get_alisten_api, get_config
 from .models import AlistenConfig
 
 
-async def is_group(session: UserSession) -> bool:
+async def is_group(user_session: UserSession) -> bool:
     """确保在群组中使用"""
-    return not session.session.scene.is_private
+    return not user_session.session.scene.is_private
 
 
 async def ensure_superuser(matcher: Matcher, is_superuser: bool = Depends(SuperUser())):
@@ -156,7 +156,7 @@ async def music_pick_handle(
 
 @alisten_cmd.assign("config.set", parameterless=[Depends(ensure_superuser)])
 async def handle_config_set(
-    user: UserSession,
+    user_session: UserSession,
     db_session: async_scoped_session,
     server_url: str,
     house_id: str,
@@ -172,7 +172,7 @@ async def handle_config_set(
     else:
         # 创建新配置
         new_config = AlistenConfig(
-            session_id=user.session_id,
+            session_id=user_session.session_id,
             server_url=server_url,
             house_id=house_id,
             house_password=house_password,
