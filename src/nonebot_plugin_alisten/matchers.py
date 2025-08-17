@@ -128,27 +128,27 @@ async def music_pick_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """处理点歌请求"""
-    name = keywords.extract_plain_text().strip()
-    if not name:
+    keywords_str = keywords.extract_plain_text().strip()
+    if not keywords_str:
         await alisten_cmd.reject_path("music.pick.keywords", "你想听哪首歌呢？")
 
     source = "wy"  # 默认音乐源
 
     # 解析特殊格式的输入
-    if ":" in name:
+    if ":" in keywords_str:
         # 格式如 "wy:song_name" 或 "qq:song_name"
-        parts = name.split(":", 1)
+        parts = keywords_str.split(":", 1)
         if len(parts) == 2 and parts[0] in ["wy", "qq", "db"]:
             source = parts[0]
-            name = parts[1]
-    elif name.startswith("BV"):
+            keywords_str = parts[1]
+    elif keywords_str.startswith("BV"):
         # Bilibili BV号
         source = "db"
 
     if id.result:
-        result = await api.pick_music(id=name, name="", source=source)
+        result = await api.pick_music(id=keywords_str, name="", source=source)
     else:
-        result = await api.pick_music(id="", name=name, source=source)
+        result = await api.pick_music(id="", name=keywords_str, source=source)
 
     if isinstance(result, PickMusicResponse):
         msg = "点歌成功！歌曲已加入播放列表"
