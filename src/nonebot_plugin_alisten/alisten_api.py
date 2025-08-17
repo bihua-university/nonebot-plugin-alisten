@@ -15,6 +15,18 @@ from .models import AlistenConfig
 T = TypeVar("T", bound=BaseModel)
 
 
+class ErrorResponse(BaseModel):
+    """错误响应"""
+
+    error: str
+
+
+class MessageResponse(BaseModel):
+    """消息响应"""
+
+    message: str
+
+
 class User(BaseModel):
     name: str
     email: str
@@ -39,18 +51,12 @@ class MusicData(BaseModel):
     id: str
 
 
-class SuccessResponse(BaseModel):
-    """成功响应"""
+class PickMusicResponse(BaseModel):
+    """点歌响应"""
 
     code: str
     message: str
     data: MusicData
-
-
-class ErrorResponse(BaseModel):
-    """错误响应"""
-
-    error: str
 
 
 class HouseInfo(BaseModel):
@@ -73,6 +79,21 @@ class HouseSearchResponse(BaseModel):
     message: str
 
 
+class DeleteMusicRequest(BaseModel):
+    """删除音乐请求"""
+
+    houseId: str
+    housePwd: str = ""
+    id: str
+
+
+class PlaylistRequest(BaseModel):
+    """获取播放列表请求"""
+
+    houseId: str
+    housePwd: str = ""
+
+
 class PlaylistItem(BaseModel):
     """播放列表项"""
 
@@ -89,27 +110,17 @@ class PlaylistResponse(BaseModel):
     playlist: list[PlaylistItem] | None = None
 
 
+class HouseUserRequest(BaseModel):
+    """获取房间用户请求"""
+
+    houseId: str
+    housePwd: str = ""
+
+
 class HouseUserResponse(BaseModel):
     """房间用户列表响应"""
 
     data: list[User] | None = None
-
-
-class DeleteMusicRequest(BaseModel):
-    """删除音乐请求"""
-
-    houseId: str
-    housePwd: str = ""
-    id: str
-
-
-class GoodMusicRequest(BaseModel):
-    """点赞音乐请求"""
-
-    houseId: str
-    housePwd: str = ""
-    index: int
-    name: str
 
 
 class VoteSkipRequest(BaseModel):
@@ -120,31 +131,20 @@ class VoteSkipRequest(BaseModel):
     user: User
 
 
-class PlaylistRequest(BaseModel):
-    """获取播放列表请求"""
-
-    houseId: str
-    housePwd: str = ""
-
-
-class HouseUserRequest(BaseModel):
-    """获取房间用户请求"""
-
-    houseId: str
-    housePwd: str = ""
-
-
-class MessageResponse(BaseModel):
-    """消息响应"""
-
-    message: str
-
-
 class VoteSkipResponse(BaseModel):
     """投票跳过响应"""
 
     message: str
     current_votes: int | None = None
+
+
+class GoodMusicRequest(BaseModel):
+    """点赞音乐请求"""
+
+    houseId: str
+    housePwd: str = ""
+    index: int
+    name: str
 
 
 class GoodMusicResponse(BaseModel):
@@ -225,7 +225,7 @@ class AlistenAPI:
         # 如果没有找到匹配的房间，返回错误
         return ErrorResponse(error=f"未找到房间ID为 {self.config.house_id} 的房间")
 
-    async def pick_music(self, name: str, source: str) -> SuccessResponse | ErrorResponse:
+    async def pick_music(self, name: str, source: str) -> PickMusicResponse | ErrorResponse:
         """点歌
 
         Args:
@@ -246,7 +246,7 @@ class AlistenAPI:
         return await self._make_request(
             method="POST",
             endpoint="/music/pick",
-            response_type=SuccessResponse,
+            response_type=PickMusicResponse,
             error_msg="点歌请求失败",
             json_data=request_data.model_dump(),
         )

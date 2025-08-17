@@ -10,7 +10,7 @@ from nonebot_plugin_user import UserSession
 from .alisten_api import (
     AlistenAPI,
     ErrorResponse,
-    SuccessResponse,
+    PickMusicResponse,
     VoteSkipResponse,
 )
 from .depends import get_alisten_api, get_config
@@ -118,7 +118,7 @@ async def music_pick_handle(
 
     result = await api.pick_music(name=name, source=source)
 
-    if isinstance(result, SuccessResponse):
+    if isinstance(result, PickMusicResponse):
         msg = "点歌成功！歌曲已加入播放列表"
         msg += f"\n歌曲：{result.data.name}"
         source_name = {
