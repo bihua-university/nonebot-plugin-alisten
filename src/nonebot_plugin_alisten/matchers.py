@@ -5,14 +5,18 @@ from nonebot.permission import SuperUser
 from nonebot.rule import Rule
 from nonebot_plugin_alconna import (
     Alconna,
+    AlconnaQuery,
     Args,
     Check,
     CommandMeta,
     Match,
+    Option,
+    Query,
     Subcommand,
     UniMessage,
     match_path,
     on_alconna,
+    store_true,
 )
 from nonebot_plugin_orm import async_scoped_session
 from nonebot_plugin_user import UserSession
@@ -44,6 +48,7 @@ alisten_cmd = on_alconna(
             "music",
             Subcommand(
                 "pick",
+                Option("--id", default=False, action=store_true, help_text="使用音乐ID点歌"),
                 Args["keywords?#音乐名称或信息", AllParam],
                 help_text=("点歌：按名称、BV号或指定平台搜索并点歌"),
             ),
@@ -73,6 +78,7 @@ alisten_cmd = on_alconna(
         meta=CommandMeta(
             description="听歌房管理",
             example="""/alisten music pick 青花瓷                 # 点歌并加入播放列表
+/alisten music pick --id 30621776               # 通过 ID 点歌
 /alisten music playlist                         # 查看播放列表
 /alisten music delete 青花瓷                    # 从播放列表删除音乐
 /alisten music good 青花瓷                      # 为音乐点赞
@@ -118,6 +124,7 @@ async def music_pick_handle_first_receive(
 @alisten_cmd.got_path("music.pick.keywords", prompt="你想听哪首歌呢？", parameterless=[Check(match_path("music.pick"))])
 async def music_pick_handle(
     keywords: UniMessage,
+    id: Query[bool] = AlconnaQuery("music.pick.id.value", False),
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """处理点歌请求"""
@@ -138,7 +145,10 @@ async def music_pick_handle(
         # Bilibili BV号
         source = "db"
 
-    result = await api.pick_music(name=name, source=source)
+    if id.result:
+        result = await api.pick_music(id=name, name="", source=source)
+    else:
+        result = await api.pick_music(id="", name=name, source=source)
 
     if isinstance(result, PickMusicResponse):
         msg = "点歌成功！歌曲已加入播放列表"

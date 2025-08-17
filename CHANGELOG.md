@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 支持显示当前房间的信息
 - 添加音乐管理功能
+- 支持通过音乐 ID 点歌
 
 ### Changed
 

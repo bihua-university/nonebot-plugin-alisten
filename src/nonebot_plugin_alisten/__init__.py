@@ -15,9 +15,10 @@ __plugin_meta__ = PluginMetadata(
 基础点歌命令：
 /music Sagitta luminis      # 按歌曲名搜索并点歌（默认 wy）
 /点歌 青花瓷                 # 中文别名，与 /music 等价
-/music BV1Xx411c7md        # 使用 B 站 BV 号点歌
-/music qq:song_name        # 指定 QQ 音乐
-/music wy:song_name        # 指定网易云音乐
+/music BV1Xx411c7md         # 使用 B 站 BV 号点歌
+/music qq:<音乐名称>         # 指定 QQ 音乐
+/music wy:<音乐名称>         # 指定网易云音乐
+/music --id <平台>:<音乐ID>  # 通过 ID 点歌
 
 播放列表管理（快捷方式）：
 /播放列表                    # 查看播放列表
