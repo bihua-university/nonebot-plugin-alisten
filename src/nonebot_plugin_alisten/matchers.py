@@ -38,7 +38,6 @@ async def ensure_superuser(matcher: Matcher, is_superuser: bool = Depends(SuperU
         await matcher.finish("权限不足，仅限超级用户使用")
 
 
-# 音乐配置管理命令
 alisten_cmd = on_alconna(
     Alconna(
         "alisten",
@@ -47,42 +46,43 @@ alisten_cmd = on_alconna(
             Subcommand(
                 "pick",
                 Args["keywords?#音乐名称或信息", AllParam],
-                help_text="通过 Alisten 服务点歌，支持多种音乐平台",
+                help_text=("点歌：按名称、BV号或指定平台搜索并点歌"),
             ),
-            Subcommand("playlist", help_text="显示当前房间的播放列表"),
+            Subcommand("playlist", help_text="查看当前房间播放列表"),
             Subcommand("delete", Args["name#要删除的音乐名称", str], help_text="从播放列表中删除指定音乐"),
             Subcommand("good", Args["name#要点赞的音乐名称", str], help_text="为播放列表中的音乐点赞"),
-            Subcommand("skip", help_text="投票跳过当前播放的音乐"),
+            Subcommand("skip", help_text="发起投票跳过当前音乐"),
+            help_text="音乐管理",
         ),
         Subcommand(
             "config",
             Subcommand(
                 "set",
                 Args["server_url", str]["house_id", str]["house_password?", str],
-                help_text="设置 Alisten 服务器配置，包括服务器地址、房间ID和可选的房间密码",
+                help_text="设置服务器配置，包括服务器地址、房间ID和可选的房间密码",
             ),
-            Subcommand("show", help_text="显示当前群组的 Alisten 配置"),
-            Subcommand("delete", help_text="删除当前群组的 Alisten 配置"),
-            help_text="管理 Alisten 音乐服务器的配置",
+            Subcommand("show", help_text="显示当前群组的配置"),
+            Subcommand("delete", help_text="删除当前群组的配置"),
+            help_text="管理服务器配置",
         ),
         Subcommand(
             "house",
             Subcommand("info", help_text="显示当前房间的信息"),
             Subcommand("user", help_text="显示当前房间的用户列表"),
-            help_text="管理 Alisten 房间",
+            help_text="管理房间",
         ),
         meta=CommandMeta(
-            description="Alisten 音乐服务管理",
-            example="""/alisten music pick 青花瓷                           # 点歌
-/alisten music playlist                               # 查看播放列表
-/alisten music delete 青花瓷                          # 删除音乐
-/alisten music good 青花瓷                            # 点赞音乐
-/alisten music skip                                   # 投票跳过
+            description="听歌房管理",
+            example="""/alisten music pick 青花瓷                 # 点歌并加入播放列表
+/alisten music playlist                         # 查看播放列表
+/alisten music delete 青花瓷                    # 从播放列表删除音乐
+/alisten music good 青花瓷                      # 为音乐点赞
+/alisten music skip                             # 发起投票跳过当前音乐
 
-/alisten house info                                   # 查看房间信息
-/alisten house user                                   # 查看房间用户
+/alisten house info                             # 查看房间信息
+/alisten house user                             # 查看房间用户列表
 
-/alisten config set http://localhost:8080 room123 password123  # 设置完整配置
+/alisten config set http://localhost:8080 room123 password123  # 设置或更新配置
 /alisten config set https://music.example.com myroom          # 设置配置（无密码）
 /alisten config show                                           # 查看当前配置
 /alisten config delete                                         # 删除配置""",
