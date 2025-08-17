@@ -363,5 +363,5 @@ async def test_music_api_request_exception(app: App, monkeypatch: pytest.MonkeyP
 
         event = fake_group_message_event_v11(message=Message("/music test"))
         ctx.receive_event(bot, event)
-        ctx.should_call_send(event=event, message="请求失败，请稍后重试", at_sender=True)
+        ctx.should_call_send(event=event, message="点歌请求失败，请稍后重试", at_sender=True)
         ctx.should_finished(alisten_cmd)

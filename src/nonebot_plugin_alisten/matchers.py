@@ -83,6 +83,8 @@ alisten_cmd = on_alconna(
     block=True,
     rule=Rule(is_group),
 )
+alisten_cmd.shortcut("music", {"command": "alisten music pick", "prefix": True})
+alisten_cmd.shortcut("点歌", {"command": "alisten music pick", "prefix": True})
 
 
 @alisten_cmd.assign("music.pick")
