@@ -1,7 +1,7 @@
 """Alisten 服务器 API 客户端"""
 
 from datetime import datetime
-from typing import cast
+from typing import TypeVar, cast
 
 from nonebot import get_driver
 from nonebot.drivers import HTTPClientMixin, Request
@@ -10,6 +10,9 @@ from nonebot_plugin_user import UserSession
 from pydantic import BaseModel
 
 from .models import AlistenConfig
+
+# 定义泛型类型
+T = TypeVar("T", bound=BaseModel)
 
 
 class User(BaseModel):
@@ -141,7 +144,7 @@ class VoteSkipResponse(BaseModel):
     """投票跳过响应"""
 
     message: str
-    current_votes: int = 0
+    current_votes: int | None = None
 
 
 class GoodMusicResponse(BaseModel):
@@ -158,33 +161,30 @@ class AlistenAPI:
         self.config = config
         self.session = session
 
-    async def pick_music(self, name: str, source: str) -> SuccessResponse | ErrorResponse:
-        """点歌
+    async def _make_request(
+        self, method: str, endpoint: str, response_type: type[T], error_msg: str, json_data: dict | None = None
+    ) -> T | ErrorResponse:
+        """通用的API请求处理方法
 
         Args:
-            name: 音乐名称或搜索关键词
-            source: 音乐源 (wy/qq/db)
+            method: HTTP方法 (GET/POST)
+            endpoint: API端点
+            response_type: 期望的响应类型
+            error_msg: 错误时的提示信息
+            json_data: POST请求的JSON数据
 
         Returns:
-            点歌结果
+            成功时返回指定类型的响应，失败时返回ErrorResponse
         """
-        request_data = PickMusicRequest(
-            houseId=self.config.house_id,
-            housePwd=self.config.house_password,
-            user=User(name=self.session.user_name, email=self.session.user_email or ""),
-            name=name,
-            source=source,
-        )
-
         try:
             driver = cast("HTTPClientMixin", get_driver())
 
-            # 创建请求对象
+            headers = {"Content-Type": "application/json"}
             request = Request(
-                method="POST",
-                url=f"{self.config.server_url}/music/pick",
-                headers={"Content-Type": "application/json"},
-                json=request_data.model_dump(),
+                method=method,
+                url=f"{self.config.server_url}{endpoint}",
+                headers=headers,
+                json=json_data,
             )
 
             response = await driver.request(request)
@@ -192,47 +192,13 @@ class AlistenAPI:
                 return ErrorResponse(error="响应内容为空，请稍后重试")
 
             if response.status_code == 200:
-                success_response = SuccessResponse.model_validate_json(response.content)
-                return success_response
-
+                return response_type.model_validate_json(response.content)
             else:
-                error_response = ErrorResponse.model_validate_json(response.content)
-                return error_response
+                return ErrorResponse.model_validate_json(response.content)
 
         except Exception:
-            logger.exception("Alisten API 请求失败")
-            return ErrorResponse(error="请求失败，请稍后重试")
-
-    async def house_search(self) -> HouseSearchResponse | ErrorResponse:
-        """搜索房间列表
-
-        Returns:
-            房间列表或错误信息
-        """
-        try:
-            driver = cast("HTTPClientMixin", get_driver())
-
-            # 创建请求对象
-            request = Request(
-                method="GET",
-                url=f"{self.config.server_url}/house/search",
-                headers={"Content-Type": "application/json"},
-            )
-
-            response = await driver.request(request)
-            if not response.content:
-                return ErrorResponse(error="响应内容为空，请稍后重试")
-
-            if response.status_code == 200:
-                house_response = HouseSearchResponse.model_validate_json(response.content)
-                return house_response
-            else:
-                error_response = ErrorResponse.model_validate_json(response.content)
-                return error_response
-
-        except Exception:
-            logger.exception("Alisten API 房间搜索请求失败")
-            return ErrorResponse(error="房间搜索请求失败，请稍后重试")
+            logger.exception(f"Alisten API {error_msg}")
+            return ErrorResponse(error=f"{error_msg}，请稍后重试")
 
     async def house_info(self) -> HouseInfo | ErrorResponse:
         """获取当前配置房间的信息
@@ -259,11 +225,50 @@ class AlistenAPI:
         # 如果没有找到匹配的房间，返回错误
         return ErrorResponse(error=f"未找到房间ID为 {self.config.house_id} 的房间")
 
+    async def pick_music(self, name: str, source: str) -> SuccessResponse | ErrorResponse:
+        """点歌
+
+        Args:
+            name: 音乐名称或搜索关键词
+            source: 音乐源 (wy/qq/db)
+
+        Returns:
+            点歌结果
+        """
+        request_data = PickMusicRequest(
+            houseId=self.config.house_id,
+            housePwd=self.config.house_password,
+            user=User(name=self.session.user_name, email=self.session.user_email or ""),
+            name=name,
+            source=source,
+        )
+
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/pick",
+            response_type=SuccessResponse,
+            error_msg="点歌请求失败",
+            json_data=request_data.model_dump(),
+        )
+
+    async def house_search(self) -> HouseSearchResponse | ErrorResponse:
+        """搜索房间列表
+
+        Returns:
+            房间列表或错误信息
+        """
+        return await self._make_request(
+            method="GET",
+            endpoint="/house/search",
+            response_type=HouseSearchResponse,
+            error_msg="房间搜索请求失败",
+        )
+
     async def delete_music(self, id: str) -> MessageResponse | ErrorResponse:
         """删除音乐
 
         Args:
-            music_name: 要删除的音乐名称
+            id: 要删除的音乐ID
 
         Returns:
             删除结果
@@ -274,36 +279,19 @@ class AlistenAPI:
             id=id,
         )
 
-        try:
-            driver = cast("HTTPClientMixin", get_driver())
-            request = Request(
-                method="POST",
-                url=f"{self.config.server_url}/music/delete",
-                headers={"Content-Type": "application/json"},
-                json=request_data.model_dump(),
-            )
-
-            response = await driver.request(request)
-            if not response.content:
-                return ErrorResponse(error="响应内容为空，请稍后重试")
-
-            if response.status_code == 200:
-                success_response = MessageResponse.model_validate_json(response.content)
-                return success_response
-            else:
-                error_response = ErrorResponse.model_validate_json(response.content)
-                return error_response
-
-        except Exception:
-            logger.exception("Alisten API 删除音乐请求失败")
-            return ErrorResponse(error="删除音乐请求失败，请稍后重试")
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/delete",
+            response_type=MessageResponse,
+            error_msg="删除音乐请求失败",
+            json_data=request_data.model_dump(),
+        )
 
     async def good_music(self, index: int) -> GoodMusicResponse | ErrorResponse:
         """点赞音乐
 
         Args:
             index: 音乐在播放列表中的索引位置（从1开始）
-            name: 音乐名称
 
         Returns:
             点赞结果
@@ -315,31 +303,15 @@ class AlistenAPI:
             name="",
         )
 
-        try:
-            driver = cast("HTTPClientMixin", get_driver())
-            request = Request(
-                method="POST",
-                url=f"{self.config.server_url}/music/good",
-                headers={"Content-Type": "application/json"},
-                json=request_data.model_dump(),
-            )
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/good",
+            response_type=GoodMusicResponse,
+            error_msg="点赞音乐请求失败",
+            json_data=request_data.model_dump(),
+        )
 
-            response = await driver.request(request)
-            if not response.content:
-                return ErrorResponse(error="响应内容为空，请稍后重试")
-
-            if response.status_code == 200:
-                success_response = GoodMusicResponse.model_validate_json(response.content)
-                return success_response
-            else:
-                error_response = ErrorResponse.model_validate_json(response.content)
-                return error_response
-
-        except Exception:
-            logger.exception("Alisten API 点赞音乐请求失败")
-            return ErrorResponse(error="点赞音乐请求失败，请稍后重试")
-
-    async def vote_skip(self) -> VoteSkipResponse | MessageResponse | ErrorResponse:
+    async def vote_skip(self) -> VoteSkipResponse | ErrorResponse:
         """投票跳过当前歌曲
 
         Returns:
@@ -351,32 +323,13 @@ class AlistenAPI:
             user=User(name=self.session.user_name, email=self.session.user_email or ""),
         )
 
-        try:
-            driver = cast("HTTPClientMixin", get_driver())
-            request = Request(
-                method="POST",
-                url=f"{self.config.server_url}/music/skip/vote",
-                headers={"Content-Type": "application/json"},
-                json=request_data.model_dump(),
-            )
-
-            response = await driver.request(request)
-            if not response.content:
-                return ErrorResponse(error="响应内容为空，请稍后重试")
-
-            if response.status_code == 200:
-                # 尝试解析为 VoteSkipResponse，如果失败则解析为 MessageResponse
-                try:
-                    return VoteSkipResponse.model_validate_json(response.content)
-                except Exception:
-                    return MessageResponse.model_validate_json(response.content)
-            else:
-                error_response = ErrorResponse.model_validate_json(response.content)
-                return error_response
-
-        except Exception:
-            logger.exception("Alisten API 投票跳过请求失败")
-            return ErrorResponse(error="投票跳过请求失败，请稍后重试")
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/skip/vote",
+            response_type=VoteSkipResponse,
+            error_msg="投票跳过请求失败",
+            json_data=request_data.model_dump(),
+        )
 
     async def get_playlist(self) -> PlaylistResponse | ErrorResponse:
         """获取当前播放列表
@@ -389,29 +342,13 @@ class AlistenAPI:
             housePwd=self.config.house_password,
         )
 
-        try:
-            driver = cast("HTTPClientMixin", get_driver())
-            request = Request(
-                method="POST",
-                url=f"{self.config.server_url}/music/playlist",
-                headers={"Content-Type": "application/json"},
-                json=request_data.model_dump(),
-            )
-
-            response = await driver.request(request)
-            if not response.content:
-                return ErrorResponse(error="响应内容为空，请稍后重试")
-
-            if response.status_code == 200:
-                playlist_response = PlaylistResponse.model_validate_json(response.content)
-                return playlist_response
-            else:
-                error_response = ErrorResponse.model_validate_json(response.content)
-                return error_response
-
-        except Exception:
-            logger.exception("Alisten API 获取播放列表请求失败")
-            return ErrorResponse(error="获取播放列表请求失败，请稍后重试")
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/playlist",
+            response_type=PlaylistResponse,
+            error_msg="获取播放列表请求失败",
+            json_data=request_data.model_dump(),
+        )
 
     async def get_house_users(self) -> HouseUserResponse | ErrorResponse:
         """获取房间用户列表
@@ -424,26 +361,10 @@ class AlistenAPI:
             housePwd=self.config.house_password,
         )
 
-        try:
-            driver = cast("HTTPClientMixin", get_driver())
-            request = Request(
-                method="POST",
-                url=f"{self.config.server_url}/house/houseuser",
-                headers={"Content-Type": "application/json"},
-                json=request_data.model_dump(),
-            )
-
-            response = await driver.request(request)
-            if not response.content:
-                return ErrorResponse(error="响应内容为空，请稍后重试")
-
-            if response.status_code == 200:
-                user_response = HouseUserResponse.model_validate_json(response.content)
-                return user_response
-            else:
-                error_response = ErrorResponse.model_validate_json(response.content)
-                return error_response
-
-        except Exception:
-            logger.exception("Alisten API 获取房间用户请求失败")
-            return ErrorResponse(error="获取房间用户请求失败，请稍后重试")
+        return await self._make_request(
+            method="POST",
+            endpoint="/house/houseuser",
+            response_type=HouseUserResponse,
+            error_msg="获取房间用户请求失败",
+            json_data=request_data.model_dump(),
+        )
