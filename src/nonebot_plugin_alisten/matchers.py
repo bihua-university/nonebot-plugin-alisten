@@ -337,11 +337,11 @@ async def handle_house_info(
 
 
 @alisten_cmd.assign("house.user")
-async def house_users_handle(
+async def house_user_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """获取房间用户列表"""
-    result = await api.get_house_users()
+    result = await api.get_house_user()
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)

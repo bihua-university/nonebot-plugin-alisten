@@ -350,7 +350,7 @@ class AlistenAPI:
             json_data=request_data.model_dump(),
         )
 
-    async def get_house_users(self) -> HouseUserResponse | ErrorResponse:
+    async def get_house_user(self) -> HouseUserResponse | ErrorResponse:
         """获取房间用户列表
 
         Returns:
