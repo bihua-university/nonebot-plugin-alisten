@@ -101,7 +101,7 @@ async def music_pick_handle(
     """处理点歌请求"""
     name = keywords.extract_plain_text().strip()
     if not name:
-        await music_pick_cmd.reject_path("keywords", "你想听哪首歌呢？")
+        await music_pick_cmd.reject_path("~keywords", "你想听哪首歌呢？")
 
     source = "wy"  # 默认音乐源
 
