@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-08-18
+
 ### Added
 
 - 支持显示当前房间的信息
@@ -53,7 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 正常工作的版本。
 
-[Unreleased]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.2.3...v0.3.0
 [0.2.3]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.2.0...v0.2.1

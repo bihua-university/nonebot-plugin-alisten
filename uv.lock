@@ -722,7 +722,7 @@ wheels = [
 
 [[package]]
 name = "nonebot-plugin-alisten"
-version = "0.2.3"
+version = "0.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "nonebot-plugin-alconna" },
