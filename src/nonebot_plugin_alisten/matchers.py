@@ -164,8 +164,108 @@ async def music_pick_handle(
         await alisten_cmd.finish(result.error, at_sender=True)
 
 
+@alisten_cmd.assign("music.playlist")
+async def music_playlist_handle(
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """获取播放列表"""
+    result = await api.get_playlist()
+
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
+
+    if not result.playlist:
+        await alisten_cmd.finish("播放列表为空", at_sender=True)
+
+    msg = "当前播放列表：\n"
+    for i, item in enumerate(result.playlist, 1):
+        source_name = {
+            "wy": "网易云",
+            "qq": "QQ音乐",
+            "db": "B站",
+        }.get(item.source, item.source)
+
+        msg += f"{i}. {item.name} [{source_name}]"
+        if item.likes > 0:
+            msg += f" ❤️{item.likes}"
+        msg += f" - {item.user.name}\n"
+
+    await alisten_cmd.finish(msg.strip(), at_sender=True)
+
+
+@alisten_cmd.assign("music.delete")
+async def music_delete_handle(
+    name: UniMessage,
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """删除音乐"""
+    playlist_result = await api.get_playlist()
+    if isinstance(playlist_result, ErrorResponse):
+        await alisten_cmd.finish(playlist_result.error, at_sender=True)
+
+    if not playlist_result.playlist:
+        await alisten_cmd.finish("播放列表为空", at_sender=True)
+
+    for item in playlist_result.playlist[1:]:
+        if item.name == name.extract_plain_text().strip():
+            music_id = item.id
+            break
+    else:
+        await alisten_cmd.finish("未找到指定音乐", at_sender=True)
+
+    result = await api.delete_music(music_id)
+
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
+
+    await alisten_cmd.finish(result.message, at_sender=True)
+
+
+@alisten_cmd.assign("music.good")
+async def music_good_handle(
+    name: UniMessage,
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """点赞音乐"""
+    playlist_result = await api.get_playlist()
+    if isinstance(playlist_result, ErrorResponse):
+        await alisten_cmd.finish(playlist_result.error, at_sender=True)
+
+    if not playlist_result.playlist:
+        await alisten_cmd.finish("播放列表为空", at_sender=True)
+
+    for i, item in enumerate(playlist_result.playlist, 1):
+        if item.name == name.extract_plain_text().strip():
+            index = i
+            break
+    else:
+        await alisten_cmd.finish("未找到指定音乐", at_sender=True)
+
+    result = await api.good_music(index)
+
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
+
+    await alisten_cmd.finish(f"{result.message}，当前点赞数：{result.likes}", at_sender=True)
+
+
+@alisten_cmd.assign("music.skip")
+async def music_skip_handle(
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """投票跳过"""
+    result = await api.vote_skip()
+
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
+    elif result.current_votes is not None:
+        await alisten_cmd.finish(f"{result.message}，当前票数：{result.current_votes}/3", at_sender=True)
+    else:
+        await alisten_cmd.finish(result.message, at_sender=True)
+
+
 @alisten_cmd.assign("config.set", parameterless=[Depends(ensure_superuser)])
-async def handle_config_set(
+async def config_set_handle(
     user_session: UserSession,
     db_session: async_scoped_session,
     server_url: str,
@@ -200,7 +300,7 @@ async def handle_config_set(
 
 
 @alisten_cmd.assign("config.show", parameterless=[Depends(ensure_superuser)])
-async def handle_config_show(config: AlistenConfig | None = Depends(get_config)):
+async def config_show_handle(config: AlistenConfig | None = Depends(get_config)):
     """显示当前配置"""
     if not config:
         await alisten_cmd.finish("当前群组未配置 Alisten 服务")
@@ -214,7 +314,7 @@ async def handle_config_show(config: AlistenConfig | None = Depends(get_config))
 
 
 @alisten_cmd.assign("config.delete", parameterless=[Depends(ensure_superuser)])
-async def handle_config_delete(
+async def config_delete_handle(
     db_session: async_scoped_session,
     config: AlistenConfig | None = Depends(get_config),
 ):
@@ -228,108 +328,8 @@ async def handle_config_delete(
     await alisten_cmd.finish("Alisten 配置已删除")
 
 
-@alisten_cmd.assign("music.playlist")
-async def playlist_handle(
-    api: AlistenAPI = Depends(get_alisten_api),
-):
-    """获取播放列表"""
-    result = await api.get_playlist()
-
-    if isinstance(result, ErrorResponse):
-        await alisten_cmd.finish(result.error, at_sender=True)
-
-    if not result.playlist:
-        await alisten_cmd.finish("播放列表为空", at_sender=True)
-
-    msg = "当前播放列表：\n"
-    for i, item in enumerate(result.playlist, 1):
-        source_name = {
-            "wy": "网易云",
-            "qq": "QQ音乐",
-            "db": "B站",
-        }.get(item.source, item.source)
-
-        msg += f"{i}. {item.name} [{source_name}]"
-        if item.likes > 0:
-            msg += f" ❤️{item.likes}"
-        msg += f" - {item.user.name}\n"
-
-    await alisten_cmd.finish(msg.strip(), at_sender=True)
-
-
-@alisten_cmd.assign("music.delete")
-async def delete_music_handle(
-    name: UniMessage,
-    api: AlistenAPI = Depends(get_alisten_api),
-):
-    """删除音乐"""
-    playlist_result = await api.get_playlist()
-    if isinstance(playlist_result, ErrorResponse):
-        await alisten_cmd.finish(playlist_result.error, at_sender=True)
-
-    if not playlist_result.playlist:
-        await alisten_cmd.finish("播放列表为空", at_sender=True)
-
-    for item in playlist_result.playlist[1:]:
-        if item.name == name.extract_plain_text().strip():
-            music_id = item.id
-            break
-    else:
-        await alisten_cmd.finish("未找到指定音乐", at_sender=True)
-
-    result = await api.delete_music(music_id)
-
-    if isinstance(result, ErrorResponse):
-        await alisten_cmd.finish(result.error, at_sender=True)
-
-    await alisten_cmd.finish(result.message, at_sender=True)
-
-
-@alisten_cmd.assign("music.good")
-async def good_music_handle(
-    name: UniMessage,
-    api: AlistenAPI = Depends(get_alisten_api),
-):
-    """点赞音乐"""
-    playlist_result = await api.get_playlist()
-    if isinstance(playlist_result, ErrorResponse):
-        await alisten_cmd.finish(playlist_result.error, at_sender=True)
-
-    if not playlist_result.playlist:
-        await alisten_cmd.finish("播放列表为空", at_sender=True)
-
-    for i, item in enumerate(playlist_result.playlist, 1):
-        if item.name == name.extract_plain_text().strip():
-            index = i
-            break
-    else:
-        await alisten_cmd.finish("未找到指定音乐", at_sender=True)
-
-    result = await api.good_music(index)
-
-    if isinstance(result, ErrorResponse):
-        await alisten_cmd.finish(result.error, at_sender=True)
-
-    await alisten_cmd.finish(f"{result.message}，当前点赞数：{result.likes}", at_sender=True)
-
-
-@alisten_cmd.assign("music.skip")
-async def vote_skip_handle(
-    api: AlistenAPI = Depends(get_alisten_api),
-):
-    """投票跳过"""
-    result = await api.vote_skip()
-
-    if isinstance(result, ErrorResponse):
-        await alisten_cmd.finish(result.error, at_sender=True)
-    elif result.current_votes is not None:
-        await alisten_cmd.finish(f"{result.message}，当前票数：{result.current_votes}/3", at_sender=True)
-    else:
-        await alisten_cmd.finish(result.message, at_sender=True)
-
-
 @alisten_cmd.assign("house.info")
-async def handle_house_info(
+async def house_info_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """获取当前房间的信息"""
