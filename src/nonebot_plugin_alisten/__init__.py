@@ -20,17 +20,11 @@ __plugin_meta__ = PluginMetadata(
 /music wy:<音乐名称>         # 指定网易云音乐
 /music --id <平台>:<音乐ID>  # 通过 ID 点歌
 
-播放列表管理（快捷方式）：
+播放列表管理：
+/切歌                       # 投票跳过当前音乐
 /播放列表                    # 查看播放列表
 /删除音乐 <音乐名称>          # 删除指定音乐
-/点赞 <音乐名称>              # 为音乐点赞
-/切歌                        # 投票跳过当前音乐
-
-播放列表管理（完整命令）：
-/alisten music playlist      # 查看播放列表
-/alisten music delete <音乐名称>  # 删除指定音乐
-/alisten music good <音乐名称>    # 为音乐点赞
-/alisten music skip          # 投票跳过当前音乐
+/点赞音乐 <音乐名称>          # 为音乐点赞
 
 房间管理：
 /alisten house info          # 查看房间信息

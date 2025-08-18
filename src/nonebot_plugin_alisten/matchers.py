@@ -99,9 +99,9 @@ alisten_cmd = on_alconna(
 )
 alisten_cmd.shortcut("music", {"command": "alisten music pick", "prefix": True})
 alisten_cmd.shortcut("点歌", {"command": "alisten music pick", "prefix": True})
-alisten_cmd.shortcut("播放列表", {"command": "alisten music playlist", "prefix": True})
-alisten_cmd.shortcut("点赞", {"command": "alisten music good", "prefix": True})
 alisten_cmd.shortcut("切歌", {"command": "alisten music skip", "prefix": True})
+alisten_cmd.shortcut("播放列表", {"command": "alisten music playlist", "prefix": True})
+alisten_cmd.shortcut("点赞音乐", {"command": "alisten music good", "prefix": True})
 alisten_cmd.shortcut("删除音乐", {"command": "alisten music delete", "prefix": True})
 
 
