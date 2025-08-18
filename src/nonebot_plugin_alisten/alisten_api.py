@@ -289,11 +289,12 @@ class AlistenAPI:
             json_data=request_data.model_dump(),
         )
 
-    async def good_music(self, index: int) -> GoodMusicResponse | ErrorResponse:
+    async def good_music(self, index: int, name: str) -> GoodMusicResponse | ErrorResponse:
         """点赞音乐
 
         Args:
             index: 音乐在播放列表中的索引位置（从1开始）
+            name: 音乐名称
 
         Returns:
             点赞结果
@@ -302,7 +303,7 @@ class AlistenAPI:
             houseId=self.config.house_id,
             housePwd=self.config.house_password,
             index=index,
-            name="",
+            name=name,
         )
 
         return await self._make_request(

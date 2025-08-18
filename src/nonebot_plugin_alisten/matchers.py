@@ -241,7 +241,7 @@ async def music_good_handle(
     else:
         await alisten_cmd.finish("未找到指定音乐", at_sender=True)
 
-    result = await api.good_music(index)
+    result = await api.good_music(index, item.name)
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)

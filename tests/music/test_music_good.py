@@ -65,7 +65,7 @@ async def test_music_good_success(app: App, respx_mock: respx.MockRouter):
     assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
     last_request = good_mock.calls.last.request
     assert json.loads(last_request.content) == snapshot(
-        {"houseId": "room123", "housePwd": "password123", "index": 1, "name": ""}
+        {"houseId": "room123", "housePwd": "password123", "index": 1, "name": "Song to Like"}
     )
 
 
@@ -151,5 +151,5 @@ async def test_music_good_failure(app: App, respx_mock: respx.MockRouter):
     assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
     last_request = good_mock.calls.last.request
     assert json.loads(last_request.content) == snapshot(
-        {"houseId": "room123", "housePwd": "password123", "index": 1, "name": ""}
+        {"houseId": "room123", "housePwd": "password123", "index": 1, "name": "Song to Like"}
     )
