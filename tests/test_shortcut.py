@@ -13,7 +13,7 @@ from tests.fake import fake_group_message_event_v11
 
 @pytest.mark.usefixtures("_configs")
 @respx.mock(assert_all_called=True)
-async def test_shortcut_playlist(app: App, respx_mock: respx.MockRouter):
+async def test_shortcut_music_playlist(app: App, respx_mock: respx.MockRouter):
     """测试快捷命令 "播放列表" """
     from nonebot_plugin_alisten import alisten_cmd
 
@@ -35,7 +35,7 @@ async def test_shortcut_playlist(app: App, respx_mock: respx.MockRouter):
 
 @pytest.mark.usefixtures("_configs")
 @respx.mock(assert_all_called=True)
-async def test_shortcut_delete_music(app: App, respx_mock: respx.MockRouter):
+async def test_shortcut_music_delete(app: App, respx_mock: respx.MockRouter):
     """测试快捷命令 "删除音乐" """
     from nonebot_plugin_alisten import alisten_cmd
 
@@ -82,7 +82,7 @@ async def test_shortcut_delete_music(app: App, respx_mock: respx.MockRouter):
 
 @pytest.mark.usefixtures("_configs")
 @respx.mock(assert_all_called=True)
-async def test_shortcut_good_music(app: App, respx_mock: respx.MockRouter):
+async def test_shortcut_music_good(app: App, respx_mock: respx.MockRouter):
     """测试快捷命令 "点赞" """
     from nonebot_plugin_alisten import alisten_cmd
 
@@ -109,7 +109,7 @@ async def test_shortcut_good_music(app: App, respx_mock: respx.MockRouter):
     async with app.test_matcher() as ctx:
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
-        event = fake_group_message_event_v11(message=Message("/点赞 Song to Like"))
+        event = fake_group_message_event_v11(message=Message("/点赞音乐 Song to Like"))
         ctx.receive_event(bot, event)
         ctx.should_call_send(event=event, message="点赞成功，当前点赞数：1", at_sender=True)
         ctx.should_finished(alisten_cmd)
@@ -124,7 +124,7 @@ async def test_shortcut_good_music(app: App, respx_mock: respx.MockRouter):
 
 @pytest.mark.usefixtures("_configs")
 @respx.mock(assert_all_called=True)
-async def test_shortcut_skip_music(app: App, respx_mock: respx.MockRouter):
+async def test_shortcut_music_skip(app: App, respx_mock: respx.MockRouter):
     """测试快捷命令 "切歌" """
     from nonebot_plugin_alisten import alisten_cmd
 
@@ -152,7 +152,7 @@ async def test_shortcut_skip_music(app: App, respx_mock: respx.MockRouter):
 
 @pytest.mark.usefixtures("_configs")
 @respx.mock(assert_all_called=True)
-async def test_shortcut_pick_music(app: App, respx_mock: respx.MockRouter):
+async def test_shortcut_music_pick(app: App, respx_mock: respx.MockRouter):
     """测试快捷命令 "点歌" """
     from nonebot_plugin_alisten import alisten_cmd
 
