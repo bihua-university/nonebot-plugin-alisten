@@ -45,7 +45,7 @@ dev = [
 universal = true
 
 [tool.poe.tasks]
-test = "pytest --cov=src --cov-report xml --junitxml=./junit.xml -n auto"
+test = "pytest --cov=src/nonebot_plugin_alisten --cov-report xml --junitxml=./junit.xml -n auto"
 bump = "bump-my-version bump"
 show-bump = "bump-my-version show-bump"
 
