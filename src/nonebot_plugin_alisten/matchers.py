@@ -1,4 +1,5 @@
-from arclet.alconna import AllParam
+from arclet.alconna import AllParam, config
+from nonebot import get_driver, logger
 from nonebot.matcher import Matcher
 from nonebot.params import Depends
 from nonebot.permission import SuperUser
@@ -10,14 +11,17 @@ from nonebot_plugin_alconna import (
     Check,
     CommandMeta,
     Match,
+    Namespace,
     Option,
     Query,
     Subcommand,
     UniMessage,
+    command_manager,
     match_path,
     on_alconna,
     store_true,
 )
+from nonebot_plugin_localstore import get_plugin_cache_dir
 from nonebot_plugin_orm import async_scoped_session
 from nonebot_plugin_user import UserSession
 
@@ -28,6 +32,24 @@ from .alisten_api import (
 )
 from .depends import get_alisten_api, get_config
 from .models import AlistenConfig
+
+ns = Namespace("alisten", disable_builtin_options=set())
+config.namespaces["alisten"] = ns
+
+driver = get_driver()
+cache_dir = get_plugin_cache_dir() / "shortcut.db"
+
+
+@driver.on_startup
+async def _() -> None:
+    command_manager.load_cache(cache_dir)
+    logger.debug("快捷指令缓存加载完成")
+
+
+@driver.on_shutdown
+async def _() -> None:
+    command_manager.dump_cache(cache_dir)
+    logger.debug("快捷指令缓存已保存")
 
 
 async def is_group(user_session: UserSession) -> bool:
@@ -92,10 +114,12 @@ alisten_cmd = on_alconna(
 /alisten config show                                           # 查看当前配置
 /alisten config delete                                         # 删除配置""",
         ),
+        namespace=config.namespaces["alisten"],
     ),
     use_cmd_start=True,
     block=True,
     rule=Rule(is_group),
+    skip_for_unmatch=False,
 )
 alisten_cmd.shortcut("music", {"command": "alisten music pick", "prefix": True})
 alisten_cmd.shortcut("点歌", {"command": "alisten music pick", "prefix": True})
