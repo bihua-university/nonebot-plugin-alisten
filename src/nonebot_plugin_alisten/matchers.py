@@ -31,6 +31,7 @@ from .alisten_api import (
     PickMusicResponse,
 )
 from .depends import get_alisten_api, get_config
+from .extensions import SuperUserShortcutExtension
 from .models import AlistenConfig
 
 ns = Namespace("alisten", disable_builtin_options=set())
@@ -120,6 +121,7 @@ alisten_cmd = on_alconna(
     block=True,
     rule=Rule(is_group),
     skip_for_unmatch=False,
+    extensions=[SuperUserShortcutExtension()],
 )
 alisten_cmd.shortcut("music", {"command": "alisten music pick", "prefix": True})
 alisten_cmd.shortcut("点歌", {"command": "alisten music pick", "prefix": True})
