@@ -193,8 +193,8 @@ async def music_pick_handle(
 
     if isinstance(result, PickMusicResponse):
         msg = "点歌成功！歌曲已加入播放列表"
-        msg += f"\n歌曲：{result.data.name}"
-        source_name = SOURCE_NAMES_FULL.get(result.data.source, result.data.source)
+        msg += f"\n歌曲：{result.name}"
+        source_name = SOURCE_NAMES_FULL.get(result.source, result.source)
         msg += f"\n来源：{source_name}"
         await alisten_cmd.finish(msg, at_sender=True)
     else:
@@ -211,11 +211,11 @@ async def music_playlist_handle(
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
 
-    if not result.playlist:
+    if not result:
         await alisten_cmd.finish("播放列表为空", at_sender=True)
 
     msg = "当前播放列表：\n"
-    for i, item in enumerate(result.playlist, 1):
+    for i, item in enumerate(result, 1):
         source_name = SOURCE_NAMES_SHORT.get(item.source, item.source)
 
         msg += f"{i}. {item.name} [{source_name}]"
@@ -236,14 +236,16 @@ async def music_delete_handle(
     if isinstance(playlist_result, ErrorResponse):
         await alisten_cmd.finish(playlist_result.error, at_sender=True)
 
-    if not playlist_result.playlist:
+    if not playlist_result:
         await alisten_cmd.finish("播放列表为空", at_sender=True)
 
-    for item in playlist_result.playlist[1:]:
+    music_id = None
+    for item in playlist_result:
         if item.name == name.extract_plain_text().strip():
             music_id = item.id
             break
-    else:
+
+    if not music_id:
         await alisten_cmd.finish("未找到指定音乐", at_sender=True)
 
     result = await api.delete_music(music_id)
@@ -251,7 +253,7 @@ async def music_delete_handle(
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
 
-    await alisten_cmd.finish(result.message, at_sender=True)
+    await alisten_cmd.finish(f"已删除音乐：{result.name}", at_sender=True)
 
 
 @alisten_cmd.assign("music.good")
@@ -264,10 +266,10 @@ async def music_good_handle(
     if isinstance(playlist_result, ErrorResponse):
         await alisten_cmd.finish(playlist_result.error, at_sender=True)
 
-    if not playlist_result.playlist:
+    if not playlist_result:
         await alisten_cmd.finish("播放列表为空", at_sender=True)
 
-    for i, item in enumerate(playlist_result.playlist, 1):
+    for i, item in enumerate(playlist_result, 1):
         if item.name == name.extract_plain_text().strip():
             index = i
             break
@@ -279,7 +281,7 @@ async def music_good_handle(
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
 
-    await alisten_cmd.finish(f"{result.message}，当前点赞数：{result.likes}", at_sender=True)
+    await alisten_cmd.finish(f"点赞成功：{result.name}，当前点赞数：{result.likes}", at_sender=True)
 
 
 @alisten_cmd.assign("music.skip")
@@ -291,10 +293,9 @@ async def music_skip_handle(
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
-    elif result.current_votes is not None:
-        await alisten_cmd.finish(f"{result.message}，当前票数：{result.current_votes}/3", at_sender=True)
     else:
-        await alisten_cmd.finish(result.message, at_sender=True)
+        required_str = f"/{result.required_votes}" if result.required_votes else ""
+        await alisten_cmd.finish(f"投票跳过，当前票数：{result.current_votes}{required_str}", at_sender=True)
 
 
 @alisten_cmd.assign("music.search")
@@ -332,8 +333,8 @@ async def music_search_handle(
     source_name = SOURCE_NAMES_FULL.get(source, source)
     msg += f"来源：{source_name}\n\n"
 
-    for i, item in enumerate(result.data[:10], 1):  # 只显示前10个结果
-        msg += f"{i}. {item.name} (ID: {item.id})\n"
+    for i, item in enumerate(result.data, 1):  # 只显示前10个结果
+        msg += f"{i}. {item.name} - {item.artist} (ID: {item.id})\n"
 
     msg += "\n使用 /alisten music pick --id <ID> 来点歌"
     await alisten_cmd.finish(msg.strip(), at_sender=True)
@@ -349,14 +350,15 @@ async def music_current_handle(
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
 
-    if not result.data:
+    if not result.name:
         await alisten_cmd.finish("当前没有播放音乐", at_sender=True)
 
-    source_name = SOURCE_NAMES_FULL.get(result.data.source, result.data.source)
+    source_name = SOURCE_NAMES_FULL.get(result.source or "", result.source or "")
 
-    msg = f"当前播放：{result.data.name}\n"
+    msg = f"当前播放：{result.name}\n"
     msg += f"来源：{source_name}\n"
-    msg += f"点歌者：{result.data.user.name}\n"
+    if result.user:
+        msg += f"点歌者：{result.user.name}\n"
 
     await alisten_cmd.finish(msg.strip(), at_sender=True)
 
@@ -480,11 +482,11 @@ async def house_user_handle(
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
 
-    if not result.data:
+    if not result:
         await alisten_cmd.finish("房间内暂无用户", at_sender=True)
 
-    msg = f"房间用户列表（共 {len(result.data)} 人）：\n"
-    for i, user in enumerate(result.data, 1):
+    msg = f"房间用户列表（共 {len(result)} 人）：\n"
+    for i, user in enumerate(result, 1):
         msg += f"{i}. {user.name}"
         msg += "\n"
 
