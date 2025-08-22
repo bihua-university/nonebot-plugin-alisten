@@ -30,6 +30,12 @@ from .alisten_api import (
     ErrorResponse,
     PickMusicResponse,
 )
+from .constants import (
+    DEFAULT_SOURCE,
+    SOURCE_NAMES_FULL,
+    SOURCE_NAMES_SHORT,
+    Source,
+)
 from .depends import get_alisten_api, get_config
 from .extensions import SuperUserShortcutExtension
 from .models import AlistenConfig
@@ -164,18 +170,18 @@ async def music_pick_handle(
     if not keywords_str:
         await alisten_cmd.reject_path("music.pick.keywords", "你想听哪首歌呢？")
 
-    source = "wy"  # 默认音乐源
+    source = DEFAULT_SOURCE  # 默认音乐源
 
     # 解析特殊格式的输入
     if ":" in keywords_str:
         # 格式如 "wy:song_name" 或 "qq:song_name"
         parts = keywords_str.split(":", 1)
-        if len(parts) == 2 and parts[0] in ["wy", "qq", "db"]:
+        if len(parts) == 2 and parts[0] in Source:
             source = parts[0]
             keywords_str = parts[1]
     elif keywords_str.startswith("BV"):
         # Bilibili BV号
-        source = "db"
+        source = Source.DB
 
     if id.result:
         result = await api.pick_music(id=keywords_str, name="", source=source)
@@ -185,11 +191,7 @@ async def music_pick_handle(
     if isinstance(result, PickMusicResponse):
         msg = "点歌成功！歌曲已加入播放列表"
         msg += f"\n歌曲：{result.data.name}"
-        source_name = {
-            "wy": "网易云音乐",
-            "qq": "QQ音乐",
-            "db": "Bilibili",
-        }.get(result.data.source, result.data.source)
+        source_name = SOURCE_NAMES_FULL.get(result.data.source, result.data.source)
         msg += f"\n来源：{source_name}"
         await alisten_cmd.finish(msg, at_sender=True)
     else:
@@ -211,11 +213,7 @@ async def music_playlist_handle(
 
     msg = "当前播放列表：\n"
     for i, item in enumerate(result.playlist, 1):
-        source_name = {
-            "wy": "网易云",
-            "qq": "QQ音乐",
-            "db": "B站",
-        }.get(item.source, item.source)
+        source_name = SOURCE_NAMES_SHORT.get(item.source, item.source)
 
         msg += f"{i}. {item.name} [{source_name}]"
         if item.likes > 0:
@@ -306,18 +304,18 @@ async def music_search_handle(
     if not keywords_str:
         await alisten_cmd.finish("请提供搜索关键词", at_sender=True)
 
-    source = "wy"  # 默认音乐源
+    source = DEFAULT_SOURCE  # 默认音乐源
 
     # 解析特殊格式的输入
     if ":" in keywords_str:
         # 格式如 "wy:song_name" 或 "qq:song_name"
         parts = keywords_str.split(":", 1)
-        if len(parts) == 2 and parts[0] in ["wy", "qq", "db"]:
+        if len(parts) == 2 and parts[0] in Source:
             source = parts[0]
             keywords_str = parts[1]
     elif keywords_str.startswith("BV"):
         # Bilibili BV号
-        source = "db"
+        source = Source.DB
 
     result = await api.search_music(name=keywords_str, source=source)
 
@@ -328,11 +326,7 @@ async def music_search_handle(
         await alisten_cmd.finish("未找到相关音乐", at_sender=True)
 
     msg = f"搜索结果（关键词：{keywords_str}）：\n"
-    source_name = {
-        "wy": "网易云音乐",
-        "qq": "QQ音乐",
-        "db": "Bilibili",
-    }.get(source, source)
+    source_name = SOURCE_NAMES_FULL.get(source, source)
     msg += f"来源：{source_name}\n\n"
 
     for i, item in enumerate(result.data[:10], 1):  # 只显示前10个结果
@@ -355,11 +349,7 @@ async def music_current_handle(
     if not result.data:
         await alisten_cmd.finish("当前没有播放音乐", at_sender=True)
 
-    source_name = {
-        "wy": "网易云音乐",
-        "qq": "QQ音乐",
-        "db": "Bilibili",
-    }.get(result.data.source, result.data.source)
+    source_name = SOURCE_NAMES_FULL.get(result.data.source, result.data.source)
 
     msg = f"当前播放：{result.data.name}\n"
     msg += f"来源：{source_name}\n"

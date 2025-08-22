@@ -40,7 +40,7 @@ class PickMusicRequest(BaseModel):
     user: User
     id: str = ""
     name: str = ""
-    source: str = "wy"
+    source: str
 
 
 class MusicData(BaseModel):
@@ -160,7 +160,7 @@ class SearchMusicRequest(BaseModel):
     houseId: str
     password: str = ""
     name: str
-    source: str = "wy"
+    source: str
 
 
 class SearchMusicItem(BaseModel):
@@ -418,7 +418,7 @@ class AlistenAPI:
             json_data=request_data.model_dump(),
         )
 
-    async def search_music(self, name: str, source: str = "wy") -> SearchMusicResponse | ErrorResponse:
+    async def search_music(self, name: str, source: str) -> SearchMusicResponse | ErrorResponse:
         """搜索音乐
 
         Args:
