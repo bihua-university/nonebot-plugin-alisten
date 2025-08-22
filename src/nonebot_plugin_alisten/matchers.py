@@ -87,6 +87,7 @@ alisten_cmd = on_alconna(
             Subcommand("skip", help_text="发起投票跳过当前音乐"),
             Subcommand("search", Args["keywords#搜索关键词", AllParam], help_text="搜索音乐"),
             Subcommand("current", help_text="查看当前播放的音乐"),
+            Subcommand("playmode", Args["mode#播放模式", str], help_text="设置播放模式(顺序播放/随机播放)"),
             help_text="音乐管理",
         ),
         Subcommand(
@@ -116,6 +117,8 @@ alisten_cmd = on_alconna(
 /alisten music delete 青花瓷                    # 从播放列表删除音乐
 /alisten music good 青花瓷                      # 为音乐点赞
 /alisten music skip                             # 发起投票跳过当前音乐
+/alisten music playmode 顺序播放                  # 设置为顺序播放模式
+/alisten music playmode 随机播放                  # 设置为随机播放模式
 
 /alisten house info                             # 查看房间信息
 /alisten house user                             # 查看房间用户列表
@@ -354,10 +357,35 @@ async def music_current_handle(
     msg = f"当前播放：{result.data.name}\n"
     msg += f"来源：{source_name}\n"
     msg += f"点歌者：{result.data.user.name}\n"
-    if result.data.likes > 0:
-        msg += f"点赞数：❤️{result.data.likes}"
 
     await alisten_cmd.finish(msg.strip(), at_sender=True)
+
+
+@alisten_cmd.assign("music.playmode")
+async def music_playmode_handle(
+    mode: str,
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """设置播放模式"""
+    # 将中文模式转换为对应的数字
+    mode_mapping = {
+        "顺序播放": 0,
+        "随机播放": 1,
+        "0": 0,
+        "1": 1,
+    }
+
+    if mode not in mode_mapping:
+        await alisten_cmd.finish("播放模式只能是 '顺序播放' 或 '随机播放'", at_sender=True)
+
+    mode_value = mode_mapping[mode]
+    result = await api.set_play_mode(mode_value)
+
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
+
+    mode_name = "顺序播放" if mode_value == 0 else "随机播放"
+    await alisten_cmd.finish(f"播放模式已设置为：{mode_name}", at_sender=True)
 
 
 @alisten_cmd.assign("config.set", parameterless=[Depends(ensure_superuser)])

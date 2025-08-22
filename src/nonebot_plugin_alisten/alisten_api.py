@@ -154,6 +154,14 @@ class GoodMusicResponse(BaseModel):
     likes: int
 
 
+class PlayModeRequest(BaseModel):
+    """设置播放模式请求"""
+
+    houseId: str
+    password: str = ""
+    mode: int  # 0: 顺序播放, 1: 随机播放
+
+
 class SearchMusicRequest(BaseModel):
     """搜索音乐请求"""
 
@@ -191,7 +199,6 @@ class CurrentMusicData(BaseModel):
     source: str
     id: str
     user: User
-    likes: int
 
 
 class CurrentMusicResponse(BaseModel):
@@ -459,5 +466,28 @@ class AlistenAPI:
             endpoint="/music/sync",
             response_type=CurrentMusicResponse,
             error_msg="获取当前音乐请求失败",
+            json_data=request_data.model_dump(),
+        )
+
+    async def set_play_mode(self, mode: int) -> MessageResponse | ErrorResponse:
+        """设置播放模式
+
+        Args:
+            mode: 播放模式 (0: 顺序播放, 1: 随机播放)
+
+        Returns:
+            设置结果
+        """
+        request_data = PlayModeRequest(
+            houseId=self.config.house_id,
+            password=self.config.house_password,
+            mode=mode,
+        )
+
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/playmode",
+            response_type=MessageResponse,
+            error_msg="设置播放模式请求失败",
             json_data=request_data.model_dump(),
         )
