@@ -42,7 +42,7 @@ async def test_music_skip_success(app: App, respx_mock: respx.MockRouter):
     assert json.loads(last_request.content) == snapshot(
         {
             "houseId": "room123",
-            "housePwd": "password123",
+            "password": "password123",
             "user": {"name": "nickname", "email": "nickname@example.com"},
         }
     )
@@ -77,7 +77,7 @@ async def test_music_skip_immediately(app: App, respx_mock: respx.MockRouter):
 
     last_request = skip_mock.calls.last.request
     assert json.loads(last_request.content) == snapshot(
-        {"houseId": "room123", "housePwd": "password123", "user": {"name": "nickname", "email": "nickname@example.com"}}
+        {"houseId": "room123", "password": "password123", "user": {"name": "nickname", "email": "nickname@example.com"}}
     )
 
 
@@ -110,5 +110,5 @@ async def test_music_skip_failure(app: App, respx_mock: respx.MockRouter):
 
     last_request = skip_mock.calls.last.request
     assert json.loads(last_request.content) == snapshot(
-        {"houseId": "room123", "housePwd": "password123", "user": {"name": "nickname", "email": "nickname@example.com"}}
+        {"houseId": "room123", "password": "password123", "user": {"name": "nickname", "email": "nickname@example.com"}}
     )

@@ -17,7 +17,7 @@ async def test_shortcut_music_playlist(app: App, respx_mock: respx.MockRouter):
     """测试快捷命令 "播放列表" """
     from nonebot_plugin_alisten import alisten_cmd
 
-    mocked_api = respx_mock.get("http://localhost:8080/music/playlist").mock(
+    mocked_api = respx_mock.post("http://localhost:8080/music/playlist").mock(
         return_value=httpx.Response(status_code=200, json={"playlist": []})
     )
 
@@ -30,7 +30,7 @@ async def test_shortcut_music_playlist(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished(alisten_cmd)
 
     last_request = mocked_api.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123"})
 
 
 @pytest.mark.usefixtures("_configs")
@@ -39,7 +39,7 @@ async def test_shortcut_music_delete(app: App, respx_mock: respx.MockRouter):
     """测试快捷命令 "删除音乐" """
     from nonebot_plugin_alisten import alisten_cmd
 
-    playlist_mock = respx_mock.get("http://localhost:8080/music/playlist").mock(
+    playlist_mock = respx_mock.post("http://localhost:8080/music/playlist").mock(
         return_value=httpx.Response(
             status_code=200,
             json={
@@ -75,9 +75,9 @@ async def test_shortcut_music_delete(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished(alisten_cmd)
 
     last_request = playlist_mock.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123"})
     last_request = delete_mock.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123", "id": "s2"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123", "id": "s2"})
 
 
 @pytest.mark.usefixtures("_configs")
@@ -86,7 +86,7 @@ async def test_shortcut_music_good(app: App, respx_mock: respx.MockRouter):
     """测试快捷命令 "点赞" """
     from nonebot_plugin_alisten import alisten_cmd
 
-    playlist_mock = respx_mock.get("http://localhost:8080/music/playlist").mock(
+    playlist_mock = respx_mock.post("http://localhost:8080/music/playlist").mock(
         return_value=httpx.Response(
             status_code=200,
             json={
@@ -115,10 +115,10 @@ async def test_shortcut_music_good(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished(alisten_cmd)
 
     last_request = playlist_mock.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123"})
     last_request = good_mock.calls.last.request
     assert json.loads(last_request.content) == snapshot(
-        {"houseId": "room123", "housePwd": "password123", "index": 1, "name": "Song to Like"}
+        {"houseId": "room123", "password": "password123", "index": 1, "name": "Song to Like"}
     )
 
 
@@ -144,7 +144,7 @@ async def test_shortcut_music_skip(app: App, respx_mock: respx.MockRouter):
     assert json.loads(last_request.content) == snapshot(
         {
             "houseId": "room123",
-            "housePwd": "password123",
+            "password": "password123",
             "user": {"name": "nickname", "email": "nickname@example.com"},
         }
     )
@@ -183,7 +183,7 @@ async def test_shortcut_music_pick(app: App, respx_mock: respx.MockRouter):
     assert json.loads(last_request.content) == snapshot(
         {
             "houseId": "room123",
-            "housePwd": "password123",
+            "password": "password123",
             "user": {"name": "nickname", "email": "nickname@example.com"},
             "id": "",
             "name": "test",

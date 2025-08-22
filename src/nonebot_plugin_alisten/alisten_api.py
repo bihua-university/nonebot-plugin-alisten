@@ -36,7 +36,7 @@ class PickMusicRequest(BaseModel):
     """点歌请求"""
 
     houseId: str
-    housePwd: str = ""
+    password: str = ""
     user: User
     id: str = ""
     name: str = ""
@@ -83,7 +83,7 @@ class DeleteMusicRequest(BaseModel):
     """删除音乐请求"""
 
     houseId: str
-    housePwd: str = ""
+    password: str = ""
     id: str
 
 
@@ -91,7 +91,7 @@ class PlaylistRequest(BaseModel):
     """获取播放列表请求"""
 
     houseId: str
-    housePwd: str = ""
+    password: str = ""
 
 
 class PlaylistItem(BaseModel):
@@ -114,7 +114,7 @@ class HouseUserRequest(BaseModel):
     """获取房间用户请求"""
 
     houseId: str
-    housePwd: str = ""
+    password: str = ""
 
 
 class HouseUserResponse(BaseModel):
@@ -127,7 +127,7 @@ class VoteSkipRequest(BaseModel):
     """投票跳过请求"""
 
     houseId: str
-    housePwd: str = ""
+    password: str = ""
     user: User
 
 
@@ -142,7 +142,7 @@ class GoodMusicRequest(BaseModel):
     """点赞音乐请求"""
 
     houseId: str
-    housePwd: str = ""
+    password: str = ""
     index: int
     name: str
 
@@ -152,6 +152,52 @@ class GoodMusicResponse(BaseModel):
 
     message: str
     likes: int
+
+
+class SearchMusicRequest(BaseModel):
+    """搜索音乐请求"""
+
+    houseId: str
+    password: str = ""
+    name: str
+    source: str = "wy"
+
+
+class SearchMusicItem(BaseModel):
+    """搜索音乐结果项"""
+
+    id: str
+    name: str
+    source: str
+
+
+class SearchMusicResponse(BaseModel):
+    """搜索音乐响应"""
+
+    data: list[SearchMusicItem] | None = None
+
+
+class CurrentMusicRequest(BaseModel):
+    """获取当前音乐请求"""
+
+    houseId: str
+    password: str = ""
+
+
+class CurrentMusicData(BaseModel):
+    """当前音乐数据"""
+
+    name: str
+    source: str
+    id: str
+    user: User
+    likes: int
+
+
+class CurrentMusicResponse(BaseModel):
+    """当前音乐响应"""
+
+    data: CurrentMusicData | None = None
 
 
 class AlistenAPI:
@@ -238,7 +284,7 @@ class AlistenAPI:
         """
         request_data = PickMusicRequest(
             houseId=self.config.house_id,
-            housePwd=self.config.house_password,
+            password=self.config.house_password,
             user=User(name=self.user_session.user_name, email=self.user_session.user_email or ""),
             id=id,
             name=name,
@@ -277,7 +323,7 @@ class AlistenAPI:
         """
         request_data = DeleteMusicRequest(
             houseId=self.config.house_id,
-            housePwd=self.config.house_password,
+            password=self.config.house_password,
             id=id,
         )
 
@@ -301,7 +347,7 @@ class AlistenAPI:
         """
         request_data = GoodMusicRequest(
             houseId=self.config.house_id,
-            housePwd=self.config.house_password,
+            password=self.config.house_password,
             index=index,
             name=name,
         )
@@ -322,7 +368,7 @@ class AlistenAPI:
         """
         request_data = VoteSkipRequest(
             houseId=self.config.house_id,
-            housePwd=self.config.house_password,
+            password=self.config.house_password,
             user=User(name=self.user_session.user_name, email=self.user_session.user_email or ""),
         )
 
@@ -342,11 +388,11 @@ class AlistenAPI:
         """
         request_data = PlaylistRequest(
             houseId=self.config.house_id,
-            housePwd=self.config.house_password,
+            password=self.config.house_password,
         )
 
         return await self._make_request(
-            method="GET",
+            method="POST",
             endpoint="/music/playlist",
             response_type=PlaylistResponse,
             error_msg="获取播放列表请求失败",
@@ -361,13 +407,57 @@ class AlistenAPI:
         """
         request_data = HouseUserRequest(
             houseId=self.config.house_id,
-            housePwd=self.config.house_password,
+            password=self.config.house_password,
         )
 
         return await self._make_request(
-            method="GET",
+            method="POST",
             endpoint="/house/houseuser",
             response_type=HouseUserResponse,
             error_msg="获取房间用户请求失败",
+            json_data=request_data.model_dump(),
+        )
+
+    async def search_music(self, name: str, source: str = "wy") -> SearchMusicResponse | ErrorResponse:
+        """搜索音乐
+
+        Args:
+            name: 音乐名称或搜索关键词
+            source: 音乐源 (wy/qq/db)
+
+        Returns:
+            搜索结果
+        """
+        request_data = SearchMusicRequest(
+            houseId=self.config.house_id,
+            password=self.config.house_password,
+            name=name,
+            source=source,
+        )
+
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/search",
+            response_type=SearchMusicResponse,
+            error_msg="搜索音乐请求失败",
+            json_data=request_data.model_dump(),
+        )
+
+    async def get_current_music(self) -> CurrentMusicResponse | ErrorResponse:
+        """获取当前播放的音乐
+
+        Returns:
+            当前音乐信息
+        """
+        request_data = CurrentMusicRequest(
+            houseId=self.config.house_id,
+            password=self.config.house_password,
+        )
+
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/sync",
+            response_type=CurrentMusicResponse,
+            error_msg="获取当前音乐请求失败",
             json_data=request_data.model_dump(),
         )

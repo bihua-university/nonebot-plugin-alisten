@@ -79,6 +79,8 @@ alisten_cmd = on_alconna(
             Subcommand("delete", Args["name#要删除的音乐名称", AllParam], help_text="从播放列表中删除指定音乐"),
             Subcommand("good", Args["name#要点赞的音乐名称", AllParam], help_text="为播放列表中的音乐点赞"),
             Subcommand("skip", help_text="发起投票跳过当前音乐"),
+            Subcommand("search", Args["keywords#搜索关键词", AllParam], help_text="搜索音乐"),
+            Subcommand("current", help_text="查看当前播放的音乐"),
             help_text="音乐管理",
         ),
         Subcommand(
@@ -102,6 +104,8 @@ alisten_cmd = on_alconna(
             description="听歌房管理",
             example="""/alisten music pick 青花瓷                 # 点歌并加入播放列表
 /alisten music pick --id 30621776               # 通过 ID 点歌
+/alisten music search 青花瓷                    # 搜索音乐
+/alisten music current                          # 查看当前播放的音乐
 /alisten music playlist                         # 查看播放列表
 /alisten music delete 青花瓷                    # 从播放列表删除音乐
 /alisten music good 青花瓷                      # 为音乐点赞
@@ -125,6 +129,8 @@ alisten_cmd = on_alconna(
 )
 alisten_cmd.shortcut("music", {"command": "alisten music pick", "prefix": True})
 alisten_cmd.shortcut("点歌", {"command": "alisten music pick", "prefix": True})
+alisten_cmd.shortcut("搜索音乐", {"command": "alisten music search", "prefix": True})
+alisten_cmd.shortcut("当前音乐", {"command": "alisten music current", "prefix": True})
 alisten_cmd.shortcut("切歌", {"command": "alisten music skip", "prefix": True})
 alisten_cmd.shortcut("播放列表", {"command": "alisten music playlist", "prefix": True})
 alisten_cmd.shortcut("点赞音乐", {"command": "alisten music good", "prefix": True})
@@ -288,6 +294,80 @@ async def music_skip_handle(
         await alisten_cmd.finish(f"{result.message}，当前票数：{result.current_votes}/3", at_sender=True)
     else:
         await alisten_cmd.finish(result.message, at_sender=True)
+
+
+@alisten_cmd.assign("music.search")
+async def music_search_handle(
+    keywords: UniMessage,
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """搜索音乐"""
+    keywords_str = keywords.extract_plain_text().strip()
+    if not keywords_str:
+        await alisten_cmd.finish("请提供搜索关键词", at_sender=True)
+
+    source = "wy"  # 默认音乐源
+
+    # 解析特殊格式的输入
+    if ":" in keywords_str:
+        # 格式如 "wy:song_name" 或 "qq:song_name"
+        parts = keywords_str.split(":", 1)
+        if len(parts) == 2 and parts[0] in ["wy", "qq", "db"]:
+            source = parts[0]
+            keywords_str = parts[1]
+    elif keywords_str.startswith("BV"):
+        # Bilibili BV号
+        source = "db"
+
+    result = await api.search_music(name=keywords_str, source=source)
+
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
+
+    if not result.data:
+        await alisten_cmd.finish("未找到相关音乐", at_sender=True)
+
+    msg = f"搜索结果（关键词：{keywords_str}）：\n"
+    source_name = {
+        "wy": "网易云音乐",
+        "qq": "QQ音乐",
+        "db": "Bilibili",
+    }.get(source, source)
+    msg += f"来源：{source_name}\n\n"
+
+    for i, item in enumerate(result.data[:10], 1):  # 只显示前10个结果
+        msg += f"{i}. {item.name} (ID: {item.id})\n"
+
+    msg += "\n使用 /alisten music pick --id <ID> 来点歌"
+    await alisten_cmd.finish(msg.strip(), at_sender=True)
+
+
+@alisten_cmd.assign("music.current")
+async def music_current_handle(
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    """查看当前播放的音乐"""
+    result = await api.get_current_music()
+
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
+
+    if not result.data:
+        await alisten_cmd.finish("当前没有播放音乐", at_sender=True)
+
+    source_name = {
+        "wy": "网易云音乐",
+        "qq": "QQ音乐",
+        "db": "Bilibili",
+    }.get(result.data.source, result.data.source)
+
+    msg = f"当前播放：{result.data.name}\n"
+    msg += f"来源：{source_name}\n"
+    msg += f"点歌者：{result.data.user.name}\n"
+    if result.data.likes > 0:
+        msg += f"点赞数：❤️{result.data.likes}"
+
+    await alisten_cmd.finish(msg.strip(), at_sender=True)
 
 
 @alisten_cmd.assign("config.set", parameterless=[Depends(ensure_superuser)])

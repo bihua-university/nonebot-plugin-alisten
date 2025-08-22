@@ -17,7 +17,7 @@ async def test_music_playlist_success(app: App, respx_mock: respx.MockRouter):
     """测试获取播放列表成功"""
     from nonebot_plugin_alisten import alisten_cmd
 
-    mocked_api = respx_mock.get("http://localhost:8080/music/playlist").mock(
+    mocked_api = respx_mock.post("http://localhost:8080/music/playlist").mock(
         return_value=httpx.Response(
             status_code=200,
             json={
@@ -56,7 +56,7 @@ async def test_music_playlist_success(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished(alisten_cmd)
 
     last_request = mocked_api.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123"})
 
 
 @pytest.mark.usefixtures("_configs")
@@ -65,7 +65,7 @@ async def test_music_playlist_empty(app: App, respx_mock: respx.MockRouter):
     """测试获取空的播放列表"""
     from nonebot_plugin_alisten import alisten_cmd
 
-    mocked_api = respx_mock.get("http://localhost:8080/music/playlist").mock(
+    mocked_api = respx_mock.post("http://localhost:8080/music/playlist").mock(
         return_value=httpx.Response(
             status_code=200,
             json={"playlist": []},
@@ -87,7 +87,7 @@ async def test_music_playlist_empty(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished(alisten_cmd)
 
     last_request = mocked_api.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123"})
 
 
 @pytest.mark.usefixtures("_configs")
@@ -96,7 +96,7 @@ async def test_music_playlist_failure(app: App, respx_mock: respx.MockRouter):
     """测试获取播放列表失败"""
     from nonebot_plugin_alisten import alisten_cmd
 
-    mocked_api = respx_mock.get("http://localhost:8080/music/playlist").mock(
+    mocked_api = respx_mock.post("http://localhost:8080/music/playlist").mock(
         return_value=httpx.Response(
             status_code=400,
             json={"error": "获取播放列表失败"},
@@ -113,4 +113,4 @@ async def test_music_playlist_failure(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished(alisten_cmd)
 
     last_request = mocked_api.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123"})

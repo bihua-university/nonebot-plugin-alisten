@@ -17,7 +17,7 @@ async def test_house_user(app: App, respx_mock: respx.MockRouter):
     """测试获取房间用户列表"""
     from nonebot_plugin_alisten import alisten_cmd
 
-    mocked_api = respx_mock.get("http://localhost:8080/house/houseuser").mock(
+    mocked_api = respx_mock.post("http://localhost:8080/house/houseuser").mock(
         return_value=httpx.Response(
             status_code=200,
             json={
@@ -43,7 +43,7 @@ async def test_house_user(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished(alisten_cmd)
 
     last_request = mocked_api.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123"})
 
 
 @pytest.mark.usefixtures("_configs")
@@ -52,7 +52,7 @@ async def test_house_user_empty(app: App, respx_mock: respx.MockRouter):
     """测试获取空的房间用户列表"""
     from nonebot_plugin_alisten import alisten_cmd
 
-    mocked_api = respx_mock.get("http://localhost:8080/house/houseuser").mock(
+    mocked_api = respx_mock.post("http://localhost:8080/house/houseuser").mock(
         return_value=httpx.Response(
             status_code=200,
             json={"code": "20000", "message": "用户列表", "data": []},
@@ -74,7 +74,7 @@ async def test_house_user_empty(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished(alisten_cmd)
 
     last_request = mocked_api.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123"})
 
 
 @pytest.mark.usefixtures("_configs")
@@ -83,7 +83,7 @@ async def test_house_user_failure(app: App, respx_mock: respx.MockRouter):
     """测试获取房间用户列表失败"""
     from nonebot_plugin_alisten import alisten_cmd
 
-    mocked_api = respx_mock.get("http://localhost:8080/house/houseuser").mock(
+    mocked_api = respx_mock.post("http://localhost:8080/house/houseuser").mock(
         return_value=httpx.Response(
             status_code=400,
             json={"error": "获取用户列表失败"},
@@ -100,4 +100,4 @@ async def test_house_user_failure(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished(alisten_cmd)
 
     last_request = mocked_api.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123"})

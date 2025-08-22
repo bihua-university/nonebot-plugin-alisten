@@ -68,7 +68,7 @@ async def test_music_pick_success(app: App, respx_mock: respx.MockRouter):
     assert json.loads(last_request.content) == snapshot(
         {
             "houseId": "room123",
-            "housePwd": "password123",
+            "password": "password123",
             "user": {"name": "nickname", "email": "nickname@example.com"},
             "id": "",
             "name": "test",
@@ -116,7 +116,7 @@ async def test_music_pick_by_id(app: App, respx_mock: respx.MockRouter):
     assert json.loads(last_request.content) == snapshot(
         {
             "houseId": "room123",
-            "housePwd": "password123",
+            "password": "password123",
             "user": {"name": "nickname", "email": "nickname@example.com"},
             "id": "123456",
             "name": "",
@@ -153,7 +153,7 @@ async def test_music_pick_failure(app: App, respx_mock: respx.MockRouter):
     assert json.loads(last_request.content) == snapshot(
         {
             "houseId": "room123",
-            "housePwd": "password123",
+            "password": "password123",
             "user": {"name": "nickname", "email": "nickname@example.com"},
             "id": "",
             "name": "test",
@@ -200,7 +200,7 @@ async def test_music_pick_bilibili(app: App, respx_mock: respx.MockRouter):
     assert json.loads(last_request.content) == snapshot(
         {
             "houseId": "room123",
-            "housePwd": "password123",
+            "password": "password123",
             "user": {"name": "nickname", "email": "nickname@example.com"},
             "id": "",
             "name": "BV1Xx411c7md",
@@ -256,7 +256,7 @@ async def test_music_pick_get_arg(app: App, respx_mock: respx.MockRouter):
     assert json.loads(last_request.content) == snapshot(
         {
             "houseId": "room123",
-            "housePwd": "password123",
+            "password": "password123",
             "user": {"name": "nickname", "email": "nickname@example.com"},
             "id": "",
             "name": "test",
@@ -304,7 +304,7 @@ async def test_music_pick_qq(app: App, respx_mock: respx.MockRouter):
     assert json.loads(last_request.content) == snapshot(
         {
             "houseId": "room123",
-            "housePwd": "password123",
+            "password": "password123",
             "user": {"name": "nickname", "email": "nickname@example.com"},
             "id": "",
             "name": "青花瓷",
@@ -352,7 +352,7 @@ async def test_music_pick_success_no_email(app: App, respx_mock: respx.MockRoute
     assert json.loads(last_request.content) == snapshot(
         {
             "houseId": "room123",
-            "housePwd": "password123",
+            "password": "password123",
             "user": {"name": "nickname10000", "email": ""},
             "id": "",
             "name": "test",

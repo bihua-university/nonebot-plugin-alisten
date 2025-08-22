@@ -17,7 +17,7 @@ async def test_music_delete_success(app: App, respx_mock: respx.MockRouter):
     """测试删除音乐成功"""
     from nonebot_plugin_alisten import alisten_cmd
 
-    playlist_mock = respx_mock.get("http://localhost:8080/music/playlist").mock(
+    playlist_mock = respx_mock.post("http://localhost:8080/music/playlist").mock(
         return_value=httpx.Response(
             status_code=200,
             json={
@@ -62,12 +62,12 @@ async def test_music_delete_success(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished(alisten_cmd)
 
     last_request = playlist_mock.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123"})
     last_request = delete_mock.calls.last.request
     assert json.loads(last_request.content) == snapshot(
         {
             "houseId": "room123",
-            "housePwd": "password123",
+            "password": "password123",
             "id": "s2",
         }
     )
@@ -79,7 +79,7 @@ async def test_music_delete_not_found(app: App, respx_mock: respx.MockRouter):
     """测试删除音乐时未找到指定音乐"""
     from nonebot_plugin_alisten import alisten_cmd
 
-    playlist_mock = respx_mock.get("http://localhost:8080/music/playlist").mock(
+    playlist_mock = respx_mock.post("http://localhost:8080/music/playlist").mock(
         return_value=httpx.Response(
             status_code=200,
             json={
@@ -118,7 +118,7 @@ async def test_music_delete_not_found(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished(alisten_cmd)
 
     last_request = playlist_mock.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123"})
 
 
 @pytest.mark.usefixtures("_configs")
@@ -127,7 +127,7 @@ async def test_music_delete_failure(app: App, respx_mock: respx.MockRouter):
     """测试删除音乐失败"""
     from nonebot_plugin_alisten import alisten_cmd
 
-    playlist_mock = respx_mock.get("http://localhost:8080/music/playlist").mock(
+    playlist_mock = respx_mock.post("http://localhost:8080/music/playlist").mock(
         return_value=httpx.Response(
             status_code=200,
             json={
@@ -172,12 +172,12 @@ async def test_music_delete_failure(app: App, respx_mock: respx.MockRouter):
         ctx.should_finished(alisten_cmd)
 
     last_request = playlist_mock.calls.last.request
-    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "housePwd": "password123"})
+    assert json.loads(last_request.content) == snapshot({"houseId": "room123", "password": "password123"})
     last_request = delete_mock.calls.last.request
     assert json.loads(last_request.content) == snapshot(
         {
             "houseId": "room123",
-            "housePwd": "password123",
+            "password": "password123",
             "id": "s2",
         }
     )
