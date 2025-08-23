@@ -116,3 +116,71 @@ async def test_shortcut_music_pick(app: App):
 """),
         )
         ctx.should_finished()
+
+
+@pytest.mark.usefixtures("_configs")
+@respx.mock(assert_all_called=True)
+async def test_shortcut_music(app: App):
+    """测试快捷命令 "music" """
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+        event = fake_group_message_event_v11(message=Message("/music -h"))
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(
+            event=event,
+            message=snapshot("""\
+/alisten music pick <...keywords> \n\
+## 注释
+  keywords: 音乐名称或信息
+点歌：按名称、BV号或指定平台搜索并点歌
+
+可用的选项有:
+* 使用音乐ID点歌
+  --id \n\
+"""),
+        )
+        ctx.should_finished()
+
+
+@pytest.mark.usefixtures("_configs")
+@respx.mock(assert_all_called=True)
+async def test_shortcut_music_search(app: App):
+    """测试快捷命令 "搜索音乐" """
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+        event = fake_group_message_event_v11(message=Message("/搜索音乐 -h"))
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(
+            event=event,
+            message=snapshot("""\
+/alisten music search <...keywords> \n\
+## 注释
+  keywords: 搜索关键词
+搜索音乐\
+"""),
+        )
+        ctx.should_finished()
+
+
+@pytest.mark.usefixtures("_configs")
+@respx.mock(assert_all_called=True)
+async def test_shortcut_music_current(app: App):
+    """测试快捷命令 "当前音乐" """
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+        event = fake_group_message_event_v11(message=Message("/当前音乐 -h"))
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(
+            event=event,
+            message=snapshot("""\
+/alisten music current \n\
+查看当前播放的音乐\
+"""),
+        )
+        ctx.should_finished()
