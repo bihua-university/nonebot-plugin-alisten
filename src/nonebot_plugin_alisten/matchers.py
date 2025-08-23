@@ -234,23 +234,9 @@ async def music_delete_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """删除音乐"""
-    result = await api.music_playlist()
-    if isinstance(result, ErrorResponse):
-        await alisten_cmd.finish(result.error, at_sender=True)
+    name_str = name.extract_plain_text().strip()
 
-    if not result.playlist:
-        await alisten_cmd.finish("播放列表为空", at_sender=True)
-
-    music_id = None
-    for item in result.playlist:
-        if item.name == name.extract_plain_text().strip():
-            music_id = item.id
-            break
-
-    if not music_id:
-        await alisten_cmd.finish("未找到指定音乐", at_sender=True)
-
-    result = await api.music_delete(music_id)
+    result = await api.music_delete(id=name_str)
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)

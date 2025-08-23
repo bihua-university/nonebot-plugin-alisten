@@ -70,6 +70,7 @@ class DeleteMusicRequest(BaseModel):
     houseId: str
     password: str = ""
     id: str
+    """虽然叫 ID 但其实是音乐名称"""
 
 
 class DeleteMusicResponse(BaseModel):
