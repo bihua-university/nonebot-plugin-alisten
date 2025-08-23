@@ -293,7 +293,7 @@ class AlistenAPI:
         """从播放列表中删除指定音乐
 
         Args:
-            id: 要删除的音乐ID
+            id: 要删除的音乐ID（虽然叫 ID 但其实是音乐名称）
 
         Returns:
             删除操作结果

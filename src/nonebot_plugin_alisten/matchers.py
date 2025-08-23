@@ -1,9 +1,11 @@
 from arclet.alconna import AllParam, config
 from nonebot import get_driver, logger
+from nonebot.adapters import MessageTemplate
 from nonebot.matcher import Matcher
-from nonebot.params import Depends
+from nonebot.params import Arg, Depends
 from nonebot.permission import SuperUser
 from nonebot.rule import Rule
+from nonebot.typing import T_State
 from nonebot_plugin_alconna import (
     Alconna,
     AlconnaQuery,
@@ -29,6 +31,7 @@ from .alisten_api import (
     AlistenAPI,
     ErrorResponse,
     PickMusicResponse,
+    PlaylistItem,
 )
 from .constants import (
     DEFAULT_SOURCE,
@@ -83,8 +86,8 @@ alisten_cmd = on_alconna(
                 help_text=("点歌：按名称、BV号或指定平台搜索并点歌"),
             ),
             Subcommand("playlist", help_text="查看当前房间播放列表"),
-            Subcommand("delete", Args["name#要删除的音乐名称", AllParam], help_text="从播放列表中删除指定音乐"),
-            Subcommand("good", Args["name#要点赞的音乐名称", AllParam], help_text="为播放列表中的音乐点赞"),
+            Subcommand("delete", Args["name?#要删除的音乐名称", AllParam], help_text="从播放列表中删除指定音乐"),
+            Subcommand("good", Args["name?#要点赞的音乐名称", AllParam], help_text="为播放列表中的音乐点赞"),
             Subcommand("skip", help_text="发起投票跳过当前音乐"),
             Subcommand("search", Args["keywords#搜索关键词", AllParam], help_text="搜索音乐"),
             Subcommand("current", help_text="查看当前播放的音乐"),
@@ -229,14 +232,51 @@ async def music_playlist_handle(
 
 
 @alisten_cmd.assign("music.delete")
+async def music_delete_handle_first_receive(
+    name: Match[UniMessage],
+    state: T_State,
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    if name.available:
+        alisten_cmd.set_path_arg("music.delete.name", name.result)
+        state["playlist"] = None
+    else:
+        playlist = await api.music_playlist()
+        if isinstance(playlist, ErrorResponse):
+            await alisten_cmd.finish(playlist.error, at_sender=True)
+
+        if not playlist.playlist:
+            await alisten_cmd.finish("当前播放列表为空", at_sender=True)
+
+        state["playlist"] = playlist.playlist
+        state["playlist_prompt"] = "\n".join(f"{index}. {item.name}" for index, item in enumerate(playlist.playlist, 1))
+
+
+@alisten_cmd.got_path(
+    "music.delete.name",
+    prompt=MessageTemplate("你想删除哪首歌呢？\n\n{playlist_prompt}"),
+    parameterless=[Check(match_path("music.delete"))],
+)
 async def music_delete_handle(
     name: UniMessage,
+    playlist: list[PlaylistItem] | None = Arg(),
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """删除音乐"""
     name_str = name.extract_plain_text().strip()
+    if playlist is None:
+        request_name = name_str
+    elif name_str.isdigit() and len(name_str) <= 2:
+        for index, item in enumerate(playlist, 1):
+            if str(index) == name_str:
+                request_name = item.name
+                break
+        else:
+            await alisten_cmd.finish("无效的序号，请重新尝试", at_sender=True)
+    else:
+        request_name = name_str
 
-    result = await api.music_delete(id=name_str)
+    result = await api.music_delete(id=request_name)
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
@@ -245,26 +285,57 @@ async def music_delete_handle(
 
 
 @alisten_cmd.assign("music.good")
+async def music_good_handle_first_receive(
+    name: Match[UniMessage],
+    state: T_State,
+    api: AlistenAPI = Depends(get_alisten_api),
+):
+    playlist = await api.music_playlist()
+    if isinstance(playlist, ErrorResponse):
+        await alisten_cmd.finish(playlist.error, at_sender=True)
+
+    if not playlist.playlist:
+        await alisten_cmd.finish("当前播放列表为空", at_sender=True)
+
+    state["playlist"] = playlist.playlist
+
+    if name.available:
+        alisten_cmd.set_path_arg("music.good.name", name.result)
+    else:
+        state["playlist_prompt"] = "\n".join(f"{index}. {item.name}" for index, item in enumerate(playlist.playlist, 1))
+
+
+@alisten_cmd.got_path(
+    "music.good.name",
+    prompt=MessageTemplate("你想为哪首歌点赞呢？\n\n{playlist_prompt}"),
+    parameterless=[Check(match_path("music.good"))],
+)
 async def music_good_handle(
     name: UniMessage,
+    playlist: list[PlaylistItem] = Arg(),
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """点赞音乐"""
-    result = await api.music_playlist()
-    if isinstance(result, ErrorResponse):
-        await alisten_cmd.finish(result.error, at_sender=True)
+    name_str = name.extract_plain_text().strip()
 
-    if not result.playlist:
-        await alisten_cmd.finish("播放列表为空", at_sender=True)
+    request_index = None
+    request_name = None
 
-    for i, item in enumerate(result.playlist, 1):
-        if item.name == name.extract_plain_text().strip():
-            index = i
-            break
+    if name_str.isdigit() and len(name_str) <= 2:
+        if int(name_str) > len(playlist) or int(name_str) < 1:
+            await alisten_cmd.finish("无效的序号，请重新尝试", at_sender=True)
+        request_index = int(name_str)
+        request_name = playlist[request_index - 1].name
     else:
-        await alisten_cmd.finish("未找到指定音乐", at_sender=True)
+        for index, item in enumerate(playlist, 1):
+            if item.name == name_str:
+                request_index = index
+                request_name = item.name
+                break
+        else:
+            await alisten_cmd.finish("无效的歌曲名称，请重新尝试", at_sender=True)
 
-    result = await api.music_good(index, item.name)
+    result = await api.music_good(request_index, request_name)
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
