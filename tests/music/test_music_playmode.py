@@ -74,7 +74,7 @@ async def test_music_playmode_failure(app: App, respx_mock: respx.MockRouter):
         {
             "houseId": "room123",
             "password": "password123",
-            "mode": 0,
+            "mode": "sequential",
         }
     )
 

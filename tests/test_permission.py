@@ -56,7 +56,8 @@ async def test_shortcut(app: App):
 [/]切歌 ...args
 [/]播放列表 ...args
 [/]点赞音乐 ...args
-[/]删除音乐 ...args\
+[/]删除音乐 ...args
+[/]播放模式 ...args\
 """),
         )
         ctx.should_finished()
