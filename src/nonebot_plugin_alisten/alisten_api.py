@@ -7,7 +7,7 @@ from nonebot import get_driver
 from nonebot.drivers import HTTPClientMixin, Request
 from nonebot.log import logger
 from nonebot_plugin_user import UserSession
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 
 from .constants import PlayMode, Source
 from .models import AlistenConfig
@@ -58,10 +58,10 @@ class HouseInfo(BaseModel):
     population: int
 
 
-class HouseSearchResponse(BaseModel):
+class HouseSearchResponse(RootModel):
     """房间搜索响应"""
 
-    data: list[HouseInfo] = []
+    root: list[HouseInfo] = []
 
 
 class DeleteMusicRequest(BaseModel):
@@ -108,10 +108,10 @@ class HouseUserRequest(BaseModel):
     password: str = ""
 
 
-class HouseUserResponse(BaseModel):
+class HouseUserResponse(RootModel):
     """房间用户列表响应"""
 
-    data: list[User] = []
+    root: list[User] = []
 
 
 class VoteSkipRequest(BaseModel):
@@ -268,20 +268,25 @@ class AlistenAPI:
         if isinstance(result, ErrorResponse):
             return result
 
-        return result.data
+        return result.root
 
-    async def house_search(self) -> HouseSearchResponse | ErrorResponse:
+    async def house_search(self) -> list[HouseInfo] | ErrorResponse:
         """搜索可用的房间列表
 
         Returns:
             房间列表或错误信息
         """
-        return await self._make_request(
+        result = await self._make_request(
             method="GET",
             endpoint="/house/search",
             response_type=HouseSearchResponse,
             error_msg="房间搜索请求失败",
         )
+
+        if isinstance(result, ErrorResponse):
+            return result
+
+        return result.root
 
     async def music_delete(self, id: str) -> DeleteMusicResponse | ErrorResponse:
         """从播放列表中删除指定音乐

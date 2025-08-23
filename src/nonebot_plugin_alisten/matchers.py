@@ -462,11 +462,11 @@ async def house_info_handle(
         await alisten_cmd.finish(result.error)
 
     # 检查房间列表是否为空
-    if not result.data:
+    if not result:
         await alisten_cmd.finish("未找到任何房间")
 
     # 在房间列表中查找匹配的房间
-    for house in result.data:
+    for house in result:
         if house.id == api.config.house_id:
             await alisten_cmd.finish(
                 f"当前房间信息:\n"

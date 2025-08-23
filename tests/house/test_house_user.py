@@ -20,12 +20,10 @@ async def test_house_user(app: App, respx_mock: respx.MockRouter):
     mocked_api = respx_mock.post("http://localhost:8080/house/houseuser").mock(
         return_value=httpx.Response(
             status_code=200,
-            json={
-                "data": [
-                    {"name": "user1", "email": "user1@example.com"},
-                    {"name": "user2", "email": ""},
-                ],
-            },
+            json=[
+                {"name": "user1", "email": "user1@example.com"},
+                {"name": "user2", "email": ""},
+            ],
         )
     )
 
@@ -55,7 +53,7 @@ async def test_house_user_empty(app: App, respx_mock: respx.MockRouter):
     mocked_api = respx_mock.post("http://localhost:8080/house/houseuser").mock(
         return_value=httpx.Response(
             status_code=200,
-            json={"code": "20000", "message": "用户列表", "data": []},
+            json=[],
         )
     )
 
