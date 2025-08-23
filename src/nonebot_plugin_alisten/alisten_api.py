@@ -9,7 +9,6 @@ from nonebot.log import logger
 from nonebot_plugin_user import UserSession
 from pydantic import BaseModel, Field, RootModel
 
-from .constants import PlayMode, Source
 from .models import AlistenConfig
 
 # 定义泛型类型
@@ -151,13 +150,13 @@ class PlayModeRequest(BaseModel):
 
     houseId: str
     password: str = ""
-    mode: PlayMode
+    mode: str
 
 
 class PlayModeResponse(BaseModel):
     """设置播放模式响应"""
 
-    mode: PlayMode
+    mode: str
 
 
 class SearchMusicRequest(BaseModel):
@@ -337,7 +336,7 @@ class AlistenAPI:
             json_data=request_data.model_dump(),
         )
 
-    async def music_pick(self, id: str, name: str, source: Source) -> PickMusicResponse | ErrorResponse:
+    async def music_pick(self, id: str, name: str, source: str) -> PickMusicResponse | ErrorResponse:
         """添加音乐到播放列表（点歌）
 
         Args:
@@ -384,7 +383,7 @@ class AlistenAPI:
             json_data=request_data.model_dump(),
         )
 
-    async def music_playmode(self, mode: PlayMode) -> PlayModeResponse | ErrorResponse:
+    async def music_playmode(self, mode: str) -> PlayModeResponse | ErrorResponse:
         """设置房间播放模式
 
         Args:

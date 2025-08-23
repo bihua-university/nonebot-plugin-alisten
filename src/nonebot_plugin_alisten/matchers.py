@@ -364,8 +364,6 @@ async def music_search_handle(
 ):
     """搜索音乐"""
     keywords_str = keywords.extract_plain_text().strip()
-    if not keywords_str:
-        await alisten_cmd.finish("请提供搜索关键词", at_sender=True)
 
     source = DEFAULT_SOURCE  # 默认音乐源
 
@@ -376,9 +374,6 @@ async def music_search_handle(
         if len(parts) == 2 and parts[0] in Source:
             source = parts[0]
             keywords_str = parts[1]
-    elif keywords_str.startswith("BV"):
-        # Bilibili BV号
-        source = Source.DB
 
     result = await api.music_search(name=keywords_str, source=source)
 
