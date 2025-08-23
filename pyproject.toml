@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-alisten"
-version = "0.3.1"
+version = "0.4.0"
 description = "NoneBot 听歌房插件"
 authors = [{ name = "uy/sun", email = "hmy0119@gmail.com" }]
 readme = "README.md"
@@ -102,7 +102,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 
 [tool.bumpversion]
-current_version = "0.3.1"
+current_version = "0.4.0"
 commit = true
 message = "chore(release): {new_version}"
 
