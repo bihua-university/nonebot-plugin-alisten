@@ -9,6 +9,7 @@ from nonebot.log import logger
 from nonebot_plugin_user import UserSession
 from pydantic import BaseModel, Field
 
+from .constants import Source
 from .models import AlistenConfig
 
 # 定义泛型类型
@@ -193,20 +194,10 @@ class CurrentMusicRequest(BaseModel):
 class CurrentMusicResponse(BaseModel):
     """当前音乐响应"""
 
-    name: str | None = None
-    source: str | None = None
-    id: str | None = None
-    user: User | None = None
-    # 其他音乐信息字段
-    type: str | None = None
-    url: str | None = None
-    webUrl: str | None = None
-    pictureUrl: str | None = None
-    duration: int | None = None
-    lyric: str | None = None
-    artist: str | None = None
-    album: dict | None = None
-    pushTime: int | None = None
+    name: str
+    source: str
+    id: str
+    user: User
 
 
 class AlistenAPI:
@@ -255,70 +246,23 @@ class AlistenAPI:
             logger.exception(f"Alisten API {error_msg}")
             return ErrorResponse(error=f"{error_msg}，请稍后重试")
 
-    async def house_info(self) -> HouseInfo | ErrorResponse:
-        """获取当前配置房间的信息
+    async def house_houseuser(self) -> list[User] | ErrorResponse:
+        """获取房间内用户列表
 
         Returns:
-            房间信息或错误信息
+            房间用户列表或错误信息
         """
-        # 先获取房间列表
-        search_result = await self.house_search()
-
-        # 如果获取房间列表失败，直接返回错误
-        if isinstance(search_result, ErrorResponse):
-            return search_result
-
-        # 检查房间列表是否为空
-        if not search_result:
-            return ErrorResponse(error="未找到任何房间")
-
-        # 在房间列表中查找匹配的房间
-        for house in search_result:
-            if house.id == self.config.house_id:
-                return house
-
-        # 如果没有找到匹配的房间，返回错误
-        return ErrorResponse(error=f"未找到房间ID为 {self.config.house_id} 的房间")
-
-    async def pick_music(self, id: str, name: str, source: str) -> PickMusicResponse | ErrorResponse:
-        """点歌. 可通过 ID 或名称点歌
-
-        Args:
-            id: 音乐 ID
-            name: 音乐名称或搜索关键词
-            source: 音乐源 (wy/qq/db)
-
-        Returns:
-            点歌结果
-        """
-        request_data = PickMusicRequest(
+        request_data = HouseUserRequest(
             houseId=self.config.house_id,
             password=self.config.house_password,
-            user=User(name=self.user_session.user_name, email=self.user_session.user_email or ""),
-            id=id,
-            name=name,
-            source=source,
         )
 
-        return await self._make_request(
-            method="POST",
-            endpoint="/music/pick",
-            response_type=PickMusicResponse,
-            error_msg="点歌请求失败",
-            json_data=request_data.model_dump(),
-        )
-
-    async def house_search(self) -> list[HouseInfo] | ErrorResponse:
-        """搜索房间列表
-
-        Returns:
-            房间列表或错误信息
-        """
         result = await self._make_request(
-            method="GET",
-            endpoint="/house/search",
-            response_type=HouseSearchResponse,
-            error_msg="房间搜索请求失败",
+            method="POST",
+            endpoint="/house/houseuser",
+            response_type=HouseUserResponse,
+            error_msg="获取房间用户请求失败",
+            json_data=request_data.model_dump(),
         )
 
         if isinstance(result, ErrorResponse):
@@ -326,14 +270,27 @@ class AlistenAPI:
 
         return result.data
 
-    async def delete_music(self, id: str) -> DeleteMusicResponse | ErrorResponse:
-        """删除音乐
+    async def house_search(self) -> HouseSearchResponse | ErrorResponse:
+        """搜索可用的房间列表
+
+        Returns:
+            房间列表或错误信息
+        """
+        return await self._make_request(
+            method="GET",
+            endpoint="/house/search",
+            response_type=HouseSearchResponse,
+            error_msg="房间搜索请求失败",
+        )
+
+    async def music_delete(self, id: str) -> DeleteMusicResponse | ErrorResponse:
+        """从播放列表中删除指定音乐
 
         Args:
             id: 要删除的音乐ID
 
         Returns:
-            删除结果
+            删除操作结果
         """
         request_data = DeleteMusicRequest(
             houseId=self.config.house_id,
@@ -349,8 +306,8 @@ class AlistenAPI:
             json_data=request_data.model_dump(),
         )
 
-    async def good_music(self, index: int, name: str) -> GoodMusicResponse | ErrorResponse:
-        """点赞音乐
+    async def music_good(self, index: int, name: str) -> GoodMusicResponse | ErrorResponse:
+        """对播放列表中的音乐进行点赞
 
         Args:
             index: 音乐在播放列表中的索引位置（从1开始）
@@ -374,38 +331,46 @@ class AlistenAPI:
             json_data=request_data.model_dump(),
         )
 
-    async def vote_skip(self) -> VoteSkipResponse | ErrorResponse:
-        """投票跳过当前歌曲
+    async def music_pick(self, id: str, name: str, source: Source) -> PickMusicResponse | ErrorResponse:
+        """添加音乐到播放列表（点歌）
+
+        Args:
+            id: 音乐ID（可选，为空时使用名称搜索）
+            name: 音乐名称或搜索关键词
+            source: 音乐源（wy=网易云音乐，qq=QQ音乐，db=酷狗音乐）
 
         Returns:
-            投票结果
+            点歌结果
         """
-        request_data = VoteSkipRequest(
+        request_data = PickMusicRequest(
             houseId=self.config.house_id,
             password=self.config.house_password,
             user=User(name=self.user_session.user_name, email=self.user_session.user_email or ""),
+            id=id,
+            name=name,
+            source=source,
         )
 
         return await self._make_request(
             method="POST",
-            endpoint="/music/skip/vote",
-            response_type=VoteSkipResponse,
-            error_msg="投票跳过请求失败",
+            endpoint="/music/pick",
+            response_type=PickMusicResponse,
+            error_msg="点歌请求失败",
             json_data=request_data.model_dump(),
         )
 
-    async def get_playlist(self) -> list[PlaylistItem] | ErrorResponse:
-        """获取当前播放列表
+    async def music_playlist(self) -> PlaylistResponse | ErrorResponse:
+        """获取房间当前播放列表
 
         Returns:
-            播放列表
+            播放列表详情，包含歌曲信息和点赞数
         """
         request_data = PlaylistRequest(
             houseId=self.config.house_id,
             password=self.config.house_password,
         )
 
-        result = await self._make_request(
+        return await self._make_request(
             method="POST",
             endpoint="/music/playlist",
             response_type=PlaylistResponse,
@@ -413,44 +378,38 @@ class AlistenAPI:
             json_data=request_data.model_dump(),
         )
 
-        if isinstance(result, ErrorResponse):
-            return result
+    async def music_playmode(self, mode: int) -> PlayModeResponse | ErrorResponse:
+        """设置房间播放模式
 
-        return result.playlist or []
-
-    async def get_house_user(self) -> list[User] | ErrorResponse:
-        """获取房间用户列表
+        Args:
+            mode: 播放模式（0=顺序播放，1=随机播放）
 
         Returns:
-            房间用户列表
+            设置结果
         """
-        request_data = HouseUserRequest(
+        request_data = PlayModeRequest(
             houseId=self.config.house_id,
             password=self.config.house_password,
+            mode=mode,
         )
 
-        result = await self._make_request(
+        return await self._make_request(
             method="POST",
-            endpoint="/house/houseuser",
-            response_type=HouseUserResponse,
-            error_msg="获取房间用户请求失败",
+            endpoint="/music/playmode",
+            response_type=PlayModeResponse,
+            error_msg="设置播放模式请求失败",
             json_data=request_data.model_dump(),
         )
 
-        if isinstance(result, ErrorResponse):
-            return result
-
-        return result.data
-
-    async def search_music(self, name: str, source: str) -> SearchMusicResponse | ErrorResponse:
-        """搜索音乐
+    async def music_search(self, name: str, source: str) -> SearchMusicResponse | ErrorResponse:
+        """在指定音乐平台搜索音乐
 
         Args:
             name: 音乐名称或搜索关键词
-            source: 音乐源 (wy/qq/db)
+            source: 音乐源（wy=网易云音乐，qq=QQ音乐，db=酷狗音乐）
 
         Returns:
-            搜索结果
+            搜索结果列表
         """
         request_data = SearchMusicRequest(
             houseId=self.config.house_id,
@@ -467,11 +426,31 @@ class AlistenAPI:
             json_data=request_data.model_dump(),
         )
 
-    async def get_current_music(self) -> CurrentMusicResponse | ErrorResponse:
-        """获取当前播放的音乐
+    async def music_skip_vote(self) -> VoteSkipResponse | ErrorResponse:
+        """投票跳过当前播放的歌曲
 
         Returns:
-            当前音乐信息
+            投票结果，包含当前票数和所需票数
+        """
+        request_data = VoteSkipRequest(
+            houseId=self.config.house_id,
+            password=self.config.house_password,
+            user=User(name=self.user_session.user_name, email=self.user_session.user_email or ""),
+        )
+
+        return await self._make_request(
+            method="POST",
+            endpoint="/music/skip/vote",
+            response_type=VoteSkipResponse,
+            error_msg="投票跳过请求失败",
+            json_data=request_data.model_dump(),
+        )
+
+    async def music_sync(self) -> CurrentMusicResponse | ErrorResponse:
+        """获取当前正在播放的音乐信息
+
+        Returns:
+            当前音乐详细信息
         """
         request_data = CurrentMusicRequest(
             houseId=self.config.house_id,
@@ -483,28 +462,5 @@ class AlistenAPI:
             endpoint="/music/sync",
             response_type=CurrentMusicResponse,
             error_msg="获取当前音乐请求失败",
-            json_data=request_data.model_dump(),
-        )
-
-    async def set_play_mode(self, mode: int) -> PlayModeResponse | ErrorResponse:
-        """设置播放模式
-
-        Args:
-            mode: 播放模式 (0: 顺序播放, 1: 随机播放)
-
-        Returns:
-            设置结果
-        """
-        request_data = PlayModeRequest(
-            houseId=self.config.house_id,
-            password=self.config.house_password,
-            mode=mode,
-        )
-
-        return await self._make_request(
-            method="POST",
-            endpoint="/music/playmode",
-            response_type=PlayModeResponse,
-            error_msg="设置播放模式请求失败",
             json_data=request_data.model_dump(),
         )

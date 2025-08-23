@@ -180,16 +180,16 @@ async def music_pick_handle(
         # 格式如 "wy:song_name" 或 "qq:song_name"
         parts = keywords_str.split(":", 1)
         if len(parts) == 2 and parts[0] in Source:
-            source = parts[0]
+            source = Source(parts[0])
             keywords_str = parts[1]
     elif keywords_str.startswith("BV"):
         # Bilibili BV号
         source = Source.DB
 
     if id.result:
-        result = await api.pick_music(id=keywords_str, name="", source=source)
+        result = await api.music_pick(id=keywords_str, name="", source=source)
     else:
-        result = await api.pick_music(id="", name=keywords_str, source=source)
+        result = await api.music_pick(id="", name=keywords_str, source=source)
 
     if isinstance(result, PickMusicResponse):
         msg = "点歌成功！歌曲已加入播放列表"
@@ -206,16 +206,16 @@ async def music_playlist_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """获取播放列表"""
-    result = await api.get_playlist()
+    result = await api.music_playlist()
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
 
-    if not result:
+    if not result.playlist:
         await alisten_cmd.finish("播放列表为空", at_sender=True)
 
     msg = "当前播放列表：\n"
-    for i, item in enumerate(result, 1):
+    for i, item in enumerate(result.playlist, 1):
         source_name = SOURCE_NAMES_SHORT.get(item.source, item.source)
 
         msg += f"{i}. {item.name} [{source_name}]"
@@ -232,15 +232,15 @@ async def music_delete_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """删除音乐"""
-    playlist_result = await api.get_playlist()
-    if isinstance(playlist_result, ErrorResponse):
-        await alisten_cmd.finish(playlist_result.error, at_sender=True)
+    result = await api.music_playlist()
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
 
-    if not playlist_result:
+    if not result.playlist:
         await alisten_cmd.finish("播放列表为空", at_sender=True)
 
     music_id = None
-    for item in playlist_result:
+    for item in result.playlist:
         if item.name == name.extract_plain_text().strip():
             music_id = item.id
             break
@@ -248,7 +248,7 @@ async def music_delete_handle(
     if not music_id:
         await alisten_cmd.finish("未找到指定音乐", at_sender=True)
 
-    result = await api.delete_music(music_id)
+    result = await api.music_delete(music_id)
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
@@ -262,21 +262,21 @@ async def music_good_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """点赞音乐"""
-    playlist_result = await api.get_playlist()
-    if isinstance(playlist_result, ErrorResponse):
-        await alisten_cmd.finish(playlist_result.error, at_sender=True)
+    result = await api.music_playlist()
+    if isinstance(result, ErrorResponse):
+        await alisten_cmd.finish(result.error, at_sender=True)
 
-    if not playlist_result:
+    if not result.playlist:
         await alisten_cmd.finish("播放列表为空", at_sender=True)
 
-    for i, item in enumerate(playlist_result, 1):
+    for i, item in enumerate(result.playlist, 1):
         if item.name == name.extract_plain_text().strip():
             index = i
             break
     else:
         await alisten_cmd.finish("未找到指定音乐", at_sender=True)
 
-    result = await api.good_music(index, item.name)
+    result = await api.music_good(index, item.name)
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
@@ -289,7 +289,7 @@ async def music_skip_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """投票跳过"""
-    result = await api.vote_skip()
+    result = await api.music_skip_vote()
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
@@ -321,7 +321,7 @@ async def music_search_handle(
         # Bilibili BV号
         source = Source.DB
 
-    result = await api.search_music(name=keywords_str, source=source)
+    result = await api.music_search(name=keywords_str, source=source)
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
@@ -345,13 +345,10 @@ async def music_current_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """查看当前播放的音乐"""
-    result = await api.get_current_music()
+    result = await api.music_sync()
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
-
-    if not result.name:
-        await alisten_cmd.finish("当前没有播放音乐", at_sender=True)
 
     source_name = SOURCE_NAMES_FULL.get(result.source or "", result.source or "")
 
@@ -381,7 +378,7 @@ async def music_playmode_handle(
         await alisten_cmd.finish("播放模式只能是 '顺序播放' 或 '随机播放'", at_sender=True)
 
     mode_value = mode_mapping[mode]
-    result = await api.set_play_mode(mode_value)
+    result = await api.music_playmode(mode_value)
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
@@ -459,17 +456,26 @@ async def house_info_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """获取当前房间的信息"""
-    result = await api.house_info()
+    result = await api.house_search()
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error)
 
-    await alisten_cmd.finish(
-        f"当前房间信息:\n"
-        f"房间ID: {result.id}\n"
-        f"房间名称: {result.name}\n"
-        f"房间描述: {result.desc}\n"
-        f"当前人数: {result.population}"
-    )
+    # 检查房间列表是否为空
+    if not result.data:
+        await alisten_cmd.finish("未找到任何房间")
+
+    # 在房间列表中查找匹配的房间
+    for house in result.data:
+        if house.id == api.config.house_id:
+            await alisten_cmd.finish(
+                f"当前房间信息:\n"
+                f"房间ID: {house.id}\n"
+                f"房间名称: {house.name}\n"
+                f"房间描述: {house.desc}\n"
+                f"当前人数: {house.population}"
+            )
+
+    await alisten_cmd.finish(f"未找到房间ID为 {api.config.house_id} 的房间")
 
 
 @alisten_cmd.assign("house.user")
@@ -477,7 +483,7 @@ async def house_user_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """获取房间用户列表"""
-    result = await api.get_house_user()
+    result = await api.house_houseuser()
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
