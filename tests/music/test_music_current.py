@@ -21,12 +21,10 @@ async def test_music_current_success(app: App, respx_mock: respx.MockRouter):
         return_value=httpx.Response(
             status_code=200,
             json={
-                "data": {
-                    "name": "测试歌曲",
-                    "source": "wy",
-                    "id": "123456",
-                    "user": {"name": "test_user", "email": "test@example.com"},
-                }
+                "name": "测试歌曲",
+                "source": "wy",
+                "id": "123456",
+                "user": {"name": "test_user", "email": "test@example.com"},
             },
         )
     )
@@ -56,8 +54,8 @@ async def test_music_current_no_music(app: App, respx_mock: respx.MockRouter):
 
     mocked_api = respx_mock.post("http://localhost:8080/music/sync").mock(
         return_value=httpx.Response(
-            status_code=200,
-            json={"data": None},
+            status_code=404,
+            json={"error": "当前没有播放音乐"},
         )
     )
 

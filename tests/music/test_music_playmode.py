@@ -21,7 +21,7 @@ async def test_music_playmode_success(app: App, respx_mock: respx.MockRouter):
         return_value=httpx.Response(
             status_code=200,
             json={
-                "message": "播放模式设置成功",
+                "mode": "random",
             },
         )
     )
@@ -30,7 +30,7 @@ async def test_music_playmode_success(app: App, respx_mock: respx.MockRouter):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
-        event = fake_group_message_event_v11(message=Message("/alisten music playmode 1"))
+        event = fake_group_message_event_v11(message=Message("/alisten music playmode random"))
         ctx.receive_event(bot, event)
         ctx.should_call_send(event=event, message="播放模式已设置为：随机播放", at_sender=True)
         ctx.should_finished(alisten_cmd)
@@ -40,7 +40,7 @@ async def test_music_playmode_success(app: App, respx_mock: respx.MockRouter):
         {
             "houseId": "room123",
             "password": "password123",
-            "mode": 1,
+            "mode": "random",
         }
     )
 
@@ -64,7 +64,7 @@ async def test_music_playmode_failure(app: App, respx_mock: respx.MockRouter):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
-        event = fake_group_message_event_v11(message=Message("/alisten music playmode 0"))
+        event = fake_group_message_event_v11(message=Message("/alisten music playmode sequential"))
         ctx.receive_event(bot, event)
         ctx.should_call_send(event=event, message="设置播放模式失败", at_sender=True)
         ctx.should_finished(alisten_cmd)
@@ -91,7 +91,7 @@ async def test_music_playmode_invalid_mode(app: App, respx_mock: respx.MockRoute
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
-        event = fake_group_message_event_v11(message=Message("/alisten music playmode 2"))
+        event = fake_group_message_event_v11(message=Message("/alisten music playmode invalid"))
         ctx.receive_event(bot, event)
         ctx.should_call_send(event=event, message="播放模式只能是 '顺序播放' 或 '随机播放'", at_sender=True)
         ctx.should_finished(alisten_cmd)

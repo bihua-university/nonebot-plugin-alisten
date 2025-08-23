@@ -39,13 +39,9 @@ async def test_music_pick_success(app: App, respx_mock: respx.MockRouter):
         return_value=httpx.Response(
             status_code=200,
             json={
-                "code": "20000",
-                "message": "点歌成功",
-                "data": {
-                    "name": "测试歌曲",
-                    "source": "wy",
-                    "id": "123456",
-                },
+                "name": "测试歌曲",
+                "source": "wy",
+                "id": "123456",
             },
         )
     )
@@ -87,13 +83,9 @@ async def test_music_pick_by_id(app: App, respx_mock: respx.MockRouter):
         return_value=httpx.Response(
             status_code=200,
             json={
-                "code": "20000",
-                "message": "点歌成功",
-                "data": {
-                    "name": "测试歌曲",
-                    "source": "wy",
-                    "id": "123456",
-                },
+                "name": "测试歌曲",
+                "source": "wy",
+                "id": "123456",
             },
         )
     )
@@ -172,13 +164,9 @@ async def test_music_pick_bilibili(app: App, respx_mock: respx.MockRouter):
         return_value=httpx.Response(
             status_code=200,
             json={
-                "code": "20000",
-                "message": "点歌成功",
-                "data": {
-                    "name": "【测试】Bilibili视频",
-                    "source": "db",
-                    "id": "BV1Xx411c7md",
-                },
+                "name": "【测试】Bilibili视频",
+                "source": "db",
+                "id": "BV1Xx411c7md",
             },
         )
     )
@@ -219,13 +207,9 @@ async def test_music_pick_get_arg(app: App, respx_mock: respx.MockRouter):
         return_value=httpx.Response(
             status_code=200,
             json={
-                "code": "20000",
-                "message": "点歌成功",
-                "data": {
-                    "name": "测试歌曲",
-                    "source": "wy",
-                    "id": "123456",
-                },
+                "name": "测试歌曲",
+                "source": "wy",
+                "id": "123456",
             },
         )
     )
@@ -275,13 +259,9 @@ async def test_music_pick_qq(app: App, respx_mock: respx.MockRouter):
         return_value=httpx.Response(
             status_code=200,
             json={
-                "code": "20000",
-                "message": "点歌成功",
-                "data": {
-                    "name": "青花瓷",
-                    "source": "qq",
-                    "id": "123456",
-                },
+                "name": "青花瓷",
+                "source": "qq",
+                "id": "123456",
             },
         )
     )
@@ -323,13 +303,9 @@ async def test_music_pick_success_no_email(app: App, respx_mock: respx.MockRoute
         return_value=httpx.Response(
             status_code=200,
             json={
-                "code": "20000",
-                "message": "点歌成功",
-                "data": {
-                    "name": "测试歌曲",
-                    "source": "wy",
-                    "id": "123456",
-                },
+                "name": "测试歌曲",
+                "source": "wy",
+                "id": "123456",
             },
         )
     )

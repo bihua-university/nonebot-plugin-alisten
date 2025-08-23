@@ -43,7 +43,7 @@ async def test_music_delete_success(app: App, respx_mock: respx.MockRouter):
     delete_mock = respx_mock.post("http://localhost:8080/music/delete").mock(
         return_value=httpx.Response(
             status_code=200,
-            json={"code": "20000", "message": "删除成功"},
+            json={"name": "Song to Delete"},
         )
     )
 
@@ -56,7 +56,7 @@ async def test_music_delete_success(app: App, respx_mock: respx.MockRouter):
 
         ctx.should_call_send(
             event=event,
-            message="删除成功",
+            message="已删除音乐：Song to Delete",
             at_sender=True,
         )
         ctx.should_finished(alisten_cmd)

@@ -43,7 +43,7 @@ async def test_music_good_success(app: App, respx_mock: respx.MockRouter):
     good_mock = respx_mock.post("http://localhost:8080/music/good").mock(
         return_value=httpx.Response(
             status_code=200,
-            json={"code": "20000", "message": "点赞成功", "likes": 1},
+            json={"name": "Song to Like", "likes": 1},
         )
     )
 
@@ -56,7 +56,7 @@ async def test_music_good_success(app: App, respx_mock: respx.MockRouter):
 
         ctx.should_call_send(
             event=event,
-            message="点赞成功，当前点赞数：1",
+            message="点赞成功：Song to Like，当前点赞数：1",
             at_sender=True,
         )
         ctx.should_finished(alisten_cmd)

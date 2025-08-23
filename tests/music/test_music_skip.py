@@ -20,7 +20,7 @@ async def test_music_skip_success(app: App, respx_mock: respx.MockRouter):
     skip_mock = respx_mock.post("http://localhost:8080/music/skip/vote").mock(
         return_value=httpx.Response(
             status_code=200,
-            json={"code": "20000", "message": "投票成功", "current_votes": 1},
+            json={"current_votes": 1, "required_votes": 2},
         )
     )
 
@@ -33,7 +33,7 @@ async def test_music_skip_success(app: App, respx_mock: respx.MockRouter):
 
         ctx.should_call_send(
             event=event,
-            message="投票成功，当前票数：1/3",
+            message="投票跳过，当前票数：1/2",
             at_sender=True,
         )
         ctx.should_finished(alisten_cmd)
@@ -57,7 +57,7 @@ async def test_music_skip_immediately(app: App, respx_mock: respx.MockRouter):
     skip_mock = respx_mock.post("http://localhost:8080/music/skip/vote").mock(
         return_value=httpx.Response(
             status_code=200,
-            json={"code": "20000", "message": "投票成功，歌曲已跳过"},
+            json={"current_votes": 1, "required_votes": 1},
         )
     )
 
@@ -70,7 +70,7 @@ async def test_music_skip_immediately(app: App, respx_mock: respx.MockRouter):
 
         ctx.should_call_send(
             event=event,
-            message="投票成功，歌曲已跳过",
+            message="投票跳过，当前票数：1/1",
             at_sender=True,
         )
         ctx.should_finished(alisten_cmd)
