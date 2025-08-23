@@ -184,3 +184,25 @@ async def test_shortcut_music_current(app: App):
 """),
         )
         ctx.should_finished()
+
+
+@pytest.mark.usefixtures("_configs")
+@respx.mock(assert_all_called=True)
+async def test_shortcut_music_playmode(app: App):
+    """测试快捷命令 "播放模式" """
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+        event = fake_group_message_event_v11(message=Message("/播放模式 -h"))
+        ctx.receive_event(bot, event)
+        ctx.should_call_send(
+            event=event,
+            message=snapshot("""\
+/alisten music playmode <mode: str> \n\
+## 注释
+  mode: 播放模式
+设置播放模式(顺序播放/随机播放)\
+"""),
+        )
+        ctx.should_finished()

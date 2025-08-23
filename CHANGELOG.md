@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ### Added
 
-- 适配最新版的 Alisten 并添加搜索音乐和当前音乐命令
+- 适配最新版的 Alisten 并添加更多命令
 
 ## [0.3.1] - 2025-08-20
 
