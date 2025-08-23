@@ -34,6 +34,7 @@ from .constants import (
     DEFAULT_SOURCE,
     SOURCE_NAMES_FULL,
     SOURCE_NAMES_SHORT,
+    PlayMode,
     Source,
 )
 from .depends import get_alisten_api, get_config
@@ -366,12 +367,12 @@ async def music_playmode_handle(
     api: AlistenAPI = Depends(get_alisten_api),
 ):
     """设置播放模式"""
-    # 将中文模式转换为对应的数字
+    # 将中文模式转换为对应参数
     mode_mapping = {
-        "顺序播放": 0,
-        "随机播放": 1,
-        "0": 0,
-        "1": 1,
+        "顺序播放": PlayMode.SEQUENTIAL,
+        "随机播放": PlayMode.RANDOM,
+        "sequential": PlayMode.SEQUENTIAL,
+        "random": PlayMode.RANDOM,
     }
 
     if mode not in mode_mapping:
@@ -383,7 +384,7 @@ async def music_playmode_handle(
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
 
-    mode_name = "顺序播放" if mode_value == 0 else "随机播放"
+    mode_name = "顺序播放" if mode_value == PlayMode.SEQUENTIAL else "随机播放"
     await alisten_cmd.finish(f"播放模式已设置为：{mode_name}", at_sender=True)
 
 

@@ -3,6 +3,11 @@
 from enum import StrEnum
 
 
+class PlayMode(StrEnum):
+    SEQUENTIAL = "sequential"
+    RANDOM = "random"
+
+
 class Source(StrEnum):
     WY = "wy"
     QQ = "qq"
