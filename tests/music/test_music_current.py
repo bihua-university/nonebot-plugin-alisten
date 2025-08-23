@@ -13,30 +13,18 @@ from tests.fake import fake_group_message_event_v11
 
 @pytest.mark.usefixtures("_configs")
 @respx.mock(assert_all_called=True)
-async def test_music_playlist_success(app: App, respx_mock: respx.MockRouter):
-    """测试获取播放列表成功"""
+async def test_music_current_success(app: App, respx_mock: respx.MockRouter):
+    """测试获取当前音乐成功"""
     from nonebot_plugin_alisten import alisten_cmd
 
-    mocked_api = respx_mock.post("http://localhost:8080/music/playlist").mock(
+    mocked_api = respx_mock.post("http://localhost:8080/music/sync").mock(
         return_value=httpx.Response(
             status_code=200,
             json={
-                "playlist": [
-                    {
-                        "id": "123",
-                        "name": "Song 1",
-                        "source": "wy",
-                        "user": {"name": "user1", "email": "a@a.com"},
-                        "likes": 5,
-                    },
-                    {
-                        "id": "456",
-                        "name": "Song 2",
-                        "source": "qq",
-                        "user": {"name": "user2", "email": "b@b.com"},
-                        "likes": 0,
-                    },
-                ]
+                "name": "测试歌曲",
+                "source": "wy",
+                "id": "123456",
+                "user": {"name": "test_user", "email": "test@example.com"},
             },
         )
     )
@@ -45,12 +33,11 @@ async def test_music_playlist_success(app: App, respx_mock: respx.MockRouter):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
-        event = fake_group_message_event_v11(message=Message("/alisten music playlist"))
+        event = fake_group_message_event_v11(message=Message("/alisten music current"))
         ctx.receive_event(bot, event)
-
         ctx.should_call_send(
             event=event,
-            message="当前播放列表：\n1. Song 1 [网易云] ❤️5 - user1\n2. Song 2 [QQ音乐] - user2",
+            message="当前播放：测试歌曲\n来源：网易云音乐\n点歌者：test_user",
             at_sender=True,
         )
         ctx.should_finished(alisten_cmd)
@@ -61,14 +48,14 @@ async def test_music_playlist_success(app: App, respx_mock: respx.MockRouter):
 
 @pytest.mark.usefixtures("_configs")
 @respx.mock(assert_all_called=True)
-async def test_music_playlist_empty(app: App, respx_mock: respx.MockRouter):
-    """测试获取空的播放列表"""
+async def test_music_current_no_music(app: App, respx_mock: respx.MockRouter):
+    """测试当前没有播放音乐"""
     from nonebot_plugin_alisten import alisten_cmd
 
-    mocked_api = respx_mock.post("http://localhost:8080/music/playlist").mock(
+    mocked_api = respx_mock.post("http://localhost:8080/music/sync").mock(
         return_value=httpx.Response(
-            status_code=200,
-            json={"playlist": []},
+            status_code=404,
+            json={"error": "当前没有播放音乐"},
         )
     )
 
@@ -76,14 +63,9 @@ async def test_music_playlist_empty(app: App, respx_mock: respx.MockRouter):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
-        event = fake_group_message_event_v11(message=Message("/alisten music playlist"))
+        event = fake_group_message_event_v11(message=Message("/alisten music current"))
         ctx.receive_event(bot, event)
-
-        ctx.should_call_send(
-            event=event,
-            message="播放列表为空",
-            at_sender=True,
-        )
+        ctx.should_call_send(event=event, message="当前没有播放音乐", at_sender=True)
         ctx.should_finished(alisten_cmd)
 
     last_request = mocked_api.calls.last.request
@@ -92,14 +74,14 @@ async def test_music_playlist_empty(app: App, respx_mock: respx.MockRouter):
 
 @pytest.mark.usefixtures("_configs")
 @respx.mock(assert_all_called=True)
-async def test_music_playlist_failure(app: App, respx_mock: respx.MockRouter):
-    """测试获取播放列表失败"""
+async def test_music_current_failure(app: App, respx_mock: respx.MockRouter):
+    """测试获取当前音乐失败"""
     from nonebot_plugin_alisten import alisten_cmd
 
-    mocked_api = respx_mock.post("http://localhost:8080/music/playlist").mock(
+    mocked_api = respx_mock.post("http://localhost:8080/music/sync").mock(
         return_value=httpx.Response(
             status_code=400,
-            json={"error": "获取播放列表失败"},
+            json={"error": "获取当前音乐失败"},
         )
     )
 
@@ -107,9 +89,9 @@ async def test_music_playlist_failure(app: App, respx_mock: respx.MockRouter):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
-        event = fake_group_message_event_v11(message=Message("/alisten music playlist"))
+        event = fake_group_message_event_v11(message=Message("/alisten music current"))
         ctx.receive_event(bot, event)
-        ctx.should_call_send(event=event, message="获取播放列表失败", at_sender=True)
+        ctx.should_call_send(event=event, message="获取当前音乐失败", at_sender=True)
         ctx.should_finished(alisten_cmd)
 
     last_request = mocked_api.calls.last.request

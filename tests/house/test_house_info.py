@@ -17,21 +17,17 @@ async def test_house_info(app: App, respx_mock: respx.MockRouter):
     respx_mock.get("http://localhost:8080/house/search").mock(
         return_value=httpx.Response(
             status_code=200,
-            json={
-                "code": "20000",
-                "data": [
-                    {
-                        "createTime": 1755320090631,
-                        "desc": "BHU 听歌房",
-                        "enableStatus": True,
-                        "id": "room123",
-                        "name": "BHU 听歌房",
-                        "needPwd": True,
-                        "population": 0,
-                    }
-                ],
-                "message": "房间列表",
-            },
+            json=[
+                {
+                    "createTime": 1755320090631,
+                    "desc": "BHU 听歌房",
+                    "enableStatus": True,
+                    "id": "room123",
+                    "name": "BHU 听歌房",
+                    "needPwd": True,
+                    "population": 0,
+                }
+            ],
         )
     )
 
@@ -57,11 +53,7 @@ async def test_house_empty(app: App, respx_mock: respx.MockRouter):
     respx_mock.get("http://localhost:8080/house/search").mock(
         return_value=httpx.Response(
             status_code=200,
-            json={
-                "code": "20000",
-                "data": [],
-                "message": "房间列表",
-            },
+            json=[],
         )
     )
 
@@ -84,21 +76,17 @@ async def test_house_info_not_exist(app: App, respx_mock: respx.MockRouter):
     respx_mock.get("http://localhost:8080/house/search").mock(
         return_value=httpx.Response(
             status_code=200,
-            json={
-                "code": "20000",
-                "data": [
-                    {
-                        "createTime": 1755320090631,
-                        "desc": "BHU 听歌房",
-                        "enableStatus": True,
-                        "id": "room_not_exist",
-                        "name": "BHU 听歌房",
-                        "needPwd": True,
-                        "population": 0,
-                    }
-                ],
-                "message": "房间列表",
-            },
+            json=[
+                {
+                    "createTime": 1755320090631,
+                    "desc": "BHU 听歌房",
+                    "enableStatus": True,
+                    "id": "room_not_exist",
+                    "name": "BHU 听歌房",
+                    "needPwd": True,
+                    "population": 0,
+                }
+            ],
         )
     )
 

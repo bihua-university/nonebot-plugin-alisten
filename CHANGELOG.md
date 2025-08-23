@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Added
+
+- 适配最新版的 Alisten 并添加更多命令
+
 ## [0.3.1] - 2025-08-20
 
 ### Added

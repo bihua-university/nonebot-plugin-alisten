@@ -39,6 +39,7 @@ dev = [
     "nonebot2[fastapi,httpx]>=2.4.3",
     "nonebot-plugin-orm[default]>=0.8.2",
     "pip-system-certs>=5.2",
+    "nb-cli>=1.4.2",
 ]
 
 [tool.uv.pip]
