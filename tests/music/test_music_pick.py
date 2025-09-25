@@ -296,6 +296,50 @@ async def test_music_pick_qq(app: App, respx_mock: respx.MockRouter):
 
 @pytest.mark.usefixtures("_configs")
 @respx.mock(assert_all_called=True)
+async def test_music_pick_any_source(app: App, respx_mock: respx.MockRouter):
+    """测试任意源点歌"""
+    from nonebot_plugin_alisten import alisten_cmd
+
+    mocked_api = respx_mock.post("http://localhost:8080/music/pick").mock(
+        return_value=httpx.Response(
+            status_code=200,
+            json={
+                "name": "青花瓷",
+                "source": "any",
+                "id": "123456",
+            },
+        )
+    )
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+
+        event = fake_group_message_event_v11(message=Message("/music any:青花瓷"))
+        ctx.receive_event(bot, event)
+
+        ctx.should_call_send(
+            event=event,
+            message="点歌成功！歌曲已加入播放列表\n歌曲：青花瓷\n来源：any",
+            at_sender=True,
+        )
+        ctx.should_finished(alisten_cmd)
+
+    last_request = mocked_api.calls.last.request
+    assert json.loads(last_request.content) == snapshot(
+        {
+            "houseId": "room123",
+            "password": "password123",
+            "user": {"name": "nickname", "email": "nickname@example.com"},
+            "id": "",
+            "name": "青花瓷",
+            "source": "any",
+        }
+    )
+
+
+@pytest.mark.usefixtures("_configs")
+@respx.mock(assert_all_called=True)
 async def test_music_pick_success_no_email(app: App, respx_mock: respx.MockRouter):
     """测试音乐点歌，没有邮箱的情况"""
     from nonebot_plugin_alisten import alisten_cmd

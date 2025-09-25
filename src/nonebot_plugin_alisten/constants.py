@@ -8,26 +8,22 @@ class PlayMode(StrEnum):
     RANDOM = "random"
 
 
-class Source(StrEnum):
-    WY = "wy"
-    QQ = "qq"
-    DB = "db"
-
-
 # 默认音乐来源
-DEFAULT_SOURCE = Source.WY
+DEFAULT_SOURCE = "wy"
 
 
 # 全称映射（用于对用户展示）
 SOURCE_NAMES_FULL: dict[str, str] = {
-    Source.WY: "网易云音乐",
-    Source.QQ: "QQ音乐",
-    Source.DB: "Bilibili",
+    "wy": "网易云音乐",
+    "qq": "QQ音乐",
+    "db": "Bilibili",
+    "url_common": "通用链接",
 }
 
 # 简称映射（短展示）
 SOURCE_NAMES_SHORT: dict[str, str] = {
-    Source.WY: "网易云",
-    Source.QQ: "QQ音乐",
-    Source.DB: "B站",
+    "wy": "网易云",
+    "qq": "QQ音乐",
+    "db": "B站",
+    "url_common": "通用",
 }
