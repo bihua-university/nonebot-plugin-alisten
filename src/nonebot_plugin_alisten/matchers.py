@@ -39,7 +39,6 @@ from .constants import (
     SOURCE_NAMES_FULL,
     SOURCE_NAMES_SHORT,
     PlayMode,
-    Source,
 )
 from .depends import get_alisten_api, get_config
 from .extensions import SuperUserShortcutExtension
@@ -185,12 +184,12 @@ async def music_pick_handle(
     if ":" in keywords_str:
         # 格式如 "wy:song_name" 或 "qq:song_name"
         parts = keywords_str.split(":", 1)
-        if len(parts) == 2 and parts[0] in Source:
-            source = Source(parts[0])
+        if len(parts) == 2:
+            source = parts[0]
             keywords_str = parts[1]
+    # Bilibili BV号
     elif keywords_str.startswith("BV"):
-        # Bilibili BV号
-        source = Source.DB
+        source = "db"
 
     if id.result:
         result = await api.music_pick(id=keywords_str, name="", source=source)
@@ -372,7 +371,7 @@ async def music_search_handle(
     if ":" in keywords_str:
         # 格式如 "wy:song_name" 或 "qq:song_name"
         parts = keywords_str.split(":", 1)
-        if len(parts) == 2 and parts[0] in Source:
+        if len(parts) == 2:
             source = parts[0]
             keywords_str = parts[1]
 

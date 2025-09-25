@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### Added
 
 - 支持通过回复消息点歌
+- 支持点任意来源的歌曲
 
 ## [0.4.0] - 2025-08-23
 
