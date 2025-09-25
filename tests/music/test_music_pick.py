@@ -6,6 +6,7 @@ import respx
 from inline_snapshot import snapshot
 from nonebot import get_adapter, get_driver
 from nonebot.adapters.onebot.v11 import Adapter, Bot, Message, MessageSegment
+from nonebot.adapters.onebot.v11.event import Reply, Sender
 from nonebug import App
 
 from tests.fake import fake_group_message_event_v11, fake_private_message_event_v11
@@ -389,3 +390,57 @@ async def test_music_pick_api_request_exception(app: App, monkeypatch: pytest.Mo
         ctx.receive_event(bot, event)
         ctx.should_call_send(event=event, message="点歌请求失败，请稍后重试", at_sender=True)
         ctx.should_finished(alisten_cmd)
+
+
+@pytest.mark.usefixtures("_configs")
+@respx.mock(assert_all_called=True)
+async def test_music_pick_reply_message(app: App, respx_mock: respx.MockRouter):
+    """测试回复消息点歌"""
+    from nonebot_plugin_alisten import alisten_cmd
+
+    mocked_api = respx_mock.post("http://localhost:8080/music/pick").mock(
+        return_value=httpx.Response(
+            status_code=200,
+            json={
+                "name": "测试歌曲",
+                "source": "wy",
+                "id": "123456",
+            },
+        )
+    )
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+
+        # 构造一个回复消息，内容为 "青花瓷"
+        reply = Reply(
+            time=1234567890,
+            message_id=12345,
+            message=Message("青花瓷"),
+            message_type="group",
+            real_id=12345,
+            sender=Sender(),
+        )
+
+        event = fake_group_message_event_v11(message=Message("/点歌"), reply=reply)
+        ctx.receive_event(bot, event)
+
+        ctx.should_call_send(
+            event=event,
+            message="点歌成功！歌曲已加入播放列表\n歌曲：测试歌曲\n来源：网易云音乐",
+            at_sender=True,
+        )
+        ctx.should_finished(alisten_cmd)
+
+    last_request = mocked_api.calls.last.request
+    assert json.loads(last_request.content) == snapshot(
+        {
+            "houseId": "room123",
+            "password": "password123",
+            "user": {"name": "nickname", "email": "nickname@example.com"},
+            "id": "",
+            "name": "青花瓷",
+            "source": "wy",
+        }
+    )
