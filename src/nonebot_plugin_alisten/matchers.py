@@ -23,6 +23,7 @@ from nonebot_plugin_alconna import (
     on_alconna,
     store_true,
 )
+from nonebot_plugin_alconna.builtins.extensions.reply import ReplyMergeExtension
 from nonebot_plugin_localstore import get_plugin_cache_dir
 from nonebot_plugin_orm import async_scoped_session
 from nonebot_plugin_user import UserSession
@@ -138,7 +139,7 @@ alisten_cmd = on_alconna(
     block=True,
     rule=Rule(is_group),
     skip_for_unmatch=False,
-    extensions=[SuperUserShortcutExtension()],
+    extensions=[SuperUserShortcutExtension(), ReplyMergeExtension()],
 )
 alisten_cmd.shortcut("music", {"command": "alisten music pick", "prefix": True})
 alisten_cmd.shortcut("点歌", {"command": "alisten music pick", "prefix": True})

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Added
+
+- 支持通过回复消息点歌
+
 ## [0.4.0] - 2025-08-23
 
 ### Added
