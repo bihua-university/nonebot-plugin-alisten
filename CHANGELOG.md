@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.4.1] - 2025-09-25
+
 ### Added
 
 - 支持通过回复消息点歌
@@ -72,7 +74,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 正常工作的版本。
 
-[Unreleased]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.2.3...v0.3.0
