@@ -342,6 +342,23 @@ async def test_music_pick_url_common(app: App, respx_mock: respx.MockRouter):
 
 @pytest.mark.usefixtures("_configs")
 @respx.mock(assert_all_called=True)
+async def test_music_pick_url_common_invalid(app: App, respx_mock: respx.MockRouter):
+    """测试通用链接点歌，无效链接"""
+    from nonebot_plugin_alisten import alisten_cmd
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+
+        event = fake_group_message_event_v11(message=Message("/链接点歌 没有网址"))
+        ctx.receive_event(bot, event)
+
+        ctx.should_call_send(event=event, message="无效的链接格式，请重新尝试", at_sender=True)
+        ctx.should_finished(alisten_cmd)
+
+
+@pytest.mark.usefixtures("_configs")
+@respx.mock(assert_all_called=True)
 async def test_music_pick_any_source(app: App, respx_mock: respx.MockRouter):
     """测试任意源点歌"""
     from nonebot_plugin_alisten import alisten_cmd
