@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Added
+
+- 添加链接点歌快捷命令并支持提取链接
+
 ## [0.4.1] - 2025-09-25
 
 ### Added
