@@ -51,6 +51,7 @@ async def test_shortcut(app: App):
             snapshot("""\
 [/]music ...args
 [/]点歌 ...args
+[/]链接点歌 ...args
 [/]搜索音乐 ...args
 [/]当前音乐 ...args
 [/]切歌 ...args
