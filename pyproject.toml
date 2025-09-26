@@ -25,16 +25,16 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.4.1",
-    "pytest-asyncio>=1.1.0",
-    "pytest-cov>=6.2.1",
-    "pytest-mock>=3.14.1",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "pytest-cov>=7.0.0",
+    "pytest-mock>=3.15.1",
     "pytest-xdist>=3.8.0",
-    "poethepoet>=0.36.0",
-    "bump-my-version>=1.2.1",
+    "poethepoet>=0.37.0",
+    "bump-my-version>=1.2.3",
     "nonebot-adapter-onebot>=2.4.6",
     "nonebug>=0.4.3",
-    "inline-snapshot>=0.27.1",
+    "inline-snapshot>=0.29.1",
     "respx>=0.22.0",
     "nonebot2[fastapi,httpx]>=2.4.3",
     "nonebot-plugin-orm[default]>=0.8.2",
