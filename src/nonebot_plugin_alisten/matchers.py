@@ -1,3 +1,5 @@
+import re
+
 from arclet.alconna import AllParam, config
 from nonebot import get_driver, logger
 from nonebot.adapters import MessageTemplate
@@ -142,6 +144,7 @@ alisten_cmd = on_alconna(
 )
 alisten_cmd.shortcut("music", {"command": "alisten music pick", "prefix": True})
 alisten_cmd.shortcut("点歌", {"command": "alisten music pick", "prefix": True})
+alisten_cmd.shortcut("链接点歌", {"command": "alisten music pick --id url_common:", "prefix": True})
 alisten_cmd.shortcut("搜索音乐", {"command": "alisten music search", "prefix": True})
 alisten_cmd.shortcut("当前音乐", {"command": "alisten music current", "prefix": True})
 alisten_cmd.shortcut("切歌", {"command": "alisten music skip", "prefix": True})
@@ -185,8 +188,15 @@ async def music_pick_handle(
         # 格式如 "wy:song_name" 或 "qq:song_name"
         parts = keywords_str.split(":", 1)
         if len(parts) == 2:
-            source = parts[0]
-            keywords_str = parts[1]
+            source = parts[0].strip()
+            keywords_str = parts[1].strip()
+        if source == "url_common":
+            # 通用链接需要用正则表达式提取出来
+            url_match = re.search(r"(https?://[^\s]+)", keywords_str)
+            if url_match:
+                keywords_str = url_match.group(1)
+            else:
+                await alisten_cmd.finish("无效的链接格式，请重新尝试", at_sender=True)
     # Bilibili BV号
     elif keywords_str.startswith("BV"):
         source = "db"

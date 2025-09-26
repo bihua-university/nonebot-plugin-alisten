@@ -296,6 +296,52 @@ async def test_music_pick_qq(app: App, respx_mock: respx.MockRouter):
 
 @pytest.mark.usefixtures("_configs")
 @respx.mock(assert_all_called=True)
+async def test_music_pick_url_common(app: App, respx_mock: respx.MockRouter):
+    """测试通用链接点歌"""
+    from nonebot_plugin_alisten import alisten_cmd
+
+    mocked_api = respx_mock.post("http://localhost:8080/music/pick").mock(
+        return_value=httpx.Response(
+            status_code=200,
+            json={
+                "name": "ノウワンライト feat.可不・初音ミク / 歌蝕",
+                "source": "url_common",
+                "id": "https://www.youtube.com/watch?v=QxeR9NiDEsc",
+            },
+        )
+    )
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+
+        event = fake_group_message_event_v11(
+            message=Message("/链接点歌 听网址 https://www.youtube.com/watch?v=QxeR9NiDEsc")
+        )
+        ctx.receive_event(bot, event)
+
+        ctx.should_call_send(
+            event=event,
+            message="点歌成功！歌曲已加入播放列表\n歌曲：ノウワンライト feat.可不・初音ミク / 歌蝕\n来源：通用链接",
+            at_sender=True,
+        )
+        ctx.should_finished(alisten_cmd)
+
+    last_request = mocked_api.calls.last.request
+    assert json.loads(last_request.content) == snapshot(
+        {
+            "houseId": "room123",
+            "password": "password123",
+            "user": {"name": "nickname", "email": "nickname@example.com"},
+            "id": "https://www.youtube.com/watch?v=QxeR9NiDEsc",
+            "name": "",
+            "source": "url_common",
+        }
+    )
+
+
+@pytest.mark.usefixtures("_configs")
+@respx.mock(assert_all_called=True)
 async def test_music_pick_any_source(app: App, respx_mock: respx.MockRouter):
     """测试任意源点歌"""
     from nonebot_plugin_alisten import alisten_cmd
