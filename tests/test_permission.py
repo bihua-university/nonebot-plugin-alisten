@@ -44,7 +44,7 @@ async def test_shortcut(app: App):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
-        event = fake_private_message_event_v11(message=Message("/alisten --shortcut list"))
+        event = fake_group_message_event_v11(message=Message("/alisten --shortcut list"))
         ctx.receive_event(bot, event)
         ctx.should_call_send(
             event,
@@ -71,7 +71,7 @@ async def test_shortcut_permission_denied(app: App):
         adapter = get_adapter(Adapter)
         bot = ctx.create_bot(base=Bot, adapter=adapter)
 
-        event = fake_private_message_event_v11(message=Message("/alisten --shortcut list"), user_id=10000)
+        event = fake_group_message_event_v11(message=Message("/alisten --shortcut list"), user_id=10000)
         ctx.receive_event(bot, event)
         ctx.should_call_send(event, "参数 --shortcut 匹配失败")
         ctx.should_finished()
