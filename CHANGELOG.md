@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+### Changed
+
+- 使用 Alconna 自带的 SuperUserShortcutExtension
+
 ## [0.4.2] - 2025-09-27
 
 ### Added

@@ -26,6 +26,7 @@ from nonebot_plugin_alconna import (
     store_true,
 )
 from nonebot_plugin_alconna.builtins.extensions.reply import ReplyMergeExtension
+from nonebot_plugin_alconna.builtins.extensions.shortcut import SuperUserShortcutExtension
 from nonebot_plugin_localstore import get_plugin_cache_dir
 from nonebot_plugin_orm import async_scoped_session
 from nonebot_plugin_user import UserSession
@@ -43,7 +44,6 @@ from .constants import (
     PlayMode,
 )
 from .depends import get_alisten_api, get_config
-from .extensions import SuperUserShortcutExtension
 from .models import AlistenConfig
 
 ns = Namespace("alisten", disable_builtin_options=set())
