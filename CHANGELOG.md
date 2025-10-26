@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ## [Unreleased]
 
+## [0.4.3] - 2025-10-26
+
 ### Changed
 
 - 使用 Alconna 自带的 SuperUserShortcutExtension
@@ -84,7 +86,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 - 正常工作的版本。
 
-[Unreleased]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/bihua-university/nonebot-plugin-alisten/compare/v0.3.1...v0.4.0
