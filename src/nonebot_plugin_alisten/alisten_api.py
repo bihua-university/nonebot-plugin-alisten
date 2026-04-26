@@ -7,7 +7,7 @@ from nonebot import get_driver
 from nonebot.drivers import HTTPClientMixin, Request
 from nonebot.log import logger
 from nonebot_plugin_user import UserSession
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field, RootModel, field_validator
 
 from .models import AlistenConfig
 
@@ -164,9 +164,10 @@ class SearchMusicRequest(BaseModel):
 
     houseId: str
     password: str = ""
-    name: str
+    keyword: str
     source: str
     pageSize: int = 10
+    pageIndex: int = 1
 
 
 class SearchMusicItem(BaseModel):
@@ -180,8 +181,13 @@ class SearchMusicItem(BaseModel):
 class SearchMusicResponse(BaseModel):
     """搜索音乐响应"""
 
-    data: list[SearchMusicItem] = Field(default=[], alias="list")
-    totalSize: int
+    data: list[SearchMusicItem] = Field(default_factory=list, alias="list")
+    totalSize: int = 0
+
+    @field_validator("data", mode="before")
+    @classmethod
+    def _coerce_null_data(cls, v: object) -> object:
+        return [] if v is None else v
 
 
 class CurrentMusicRequest(BaseModel):
@@ -406,11 +412,11 @@ class AlistenAPI:
             json_data=request_data.model_dump(),
         )
 
-    async def music_search(self, name: str, source: str) -> SearchMusicResponse | ErrorResponse:
+    async def music_search(self, keyword: str, source: str) -> SearchMusicResponse | ErrorResponse:
         """在指定音乐平台搜索音乐
 
         Args:
-            name: 音乐名称或搜索关键词
+            keyword: 音乐名称或搜索关键词
             source: 音乐源（wy=网易云音乐，qq=QQ音乐，db=酷狗音乐）
 
         Returns:
@@ -419,7 +425,7 @@ class AlistenAPI:
         request_data = SearchMusicRequest(
             houseId=self.config.house_id,
             password=self.config.house_password,
-            name=name,
+            keyword=keyword,
             source=source,
         )
 

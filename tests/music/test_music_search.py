@@ -62,9 +62,10 @@ async def test_music_search_success(app: App, respx_mock: respx.MockRouter):
         {
             "houseId": "room123",
             "password": "password123",
-            "name": "青花瓷",
+            "keyword": "青花瓷",
             "source": "wy",
             "pageSize": 10,
+            "pageIndex": 1,
         }
     )
 
@@ -114,9 +115,10 @@ async def test_music_search_with_source_prefix(app: App, respx_mock: respx.MockR
         {
             "houseId": "room123",
             "password": "password123",
-            "name": "稻香",
+            "keyword": "稻香",
             "source": "qq",
             "pageSize": 10,
+            "pageIndex": 1,
         }
     )
 
@@ -156,9 +158,53 @@ async def test_music_search_no_results(app: App, respx_mock: respx.MockRouter):
         {
             "houseId": "room123",
             "password": "password123",
-            "name": "不存在的歌曲",
+            "keyword": "不存在的歌曲",
             "source": "wy",
             "pageSize": 10,
+            "pageIndex": 1,
+        }
+    )
+
+
+@pytest.mark.usefixtures("_configs")
+@respx.mock(assert_all_called=True)
+async def test_music_search_null_data(app: App, respx_mock: respx.MockRouter):
+    """测试搜索音乐返回 data 为 null 的情况"""
+    from nonebot_plugin_alisten import alisten_cmd
+
+    search_mock = respx_mock.post("http://localhost:8080/music/search").mock(
+        return_value=httpx.Response(
+            status_code=200,
+            json={
+                "list": None,
+                "totalSize": 0,
+            },
+        )
+    )
+
+    async with app.test_matcher() as ctx:
+        adapter = get_adapter(Adapter)
+        bot = ctx.create_bot(base=Bot, adapter=adapter)
+
+        event = fake_group_message_event_v11(message=Message("/alisten music search 不存在的歌曲"))
+        ctx.receive_event(bot, event)
+
+        ctx.should_call_send(
+            event=event,
+            message="未找到相关音乐",
+            at_sender=True,
+        )
+        ctx.should_finished(alisten_cmd)
+
+    last_request = search_mock.calls.last.request
+    assert json.loads(last_request.content) == snapshot(
+        {
+            "houseId": "room123",
+            "password": "password123",
+            "keyword": "不存在的歌曲",
+            "source": "wy",
+            "pageSize": 10,
+            "pageIndex": 1,
         }
     )
 
@@ -195,9 +241,10 @@ async def test_music_search_api_error(app: App, respx_mock: respx.MockRouter):
         {
             "houseId": "room123",
             "password": "password123",
-            "name": "青花瓷",
+            "keyword": "青花瓷",
             "source": "wy",
             "pageSize": 10,
+            "pageIndex": 1,
         }
     )
 

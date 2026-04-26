@@ -385,7 +385,7 @@ async def music_search_handle(
             source = parts[0]
             keywords_str = parts[1]
 
-    result = await api.music_search(name=keywords_str, source=source)
+    result = await api.music_search(keyword=keywords_str, source=source)
 
     if isinstance(result, ErrorResponse):
         await alisten_cmd.finish(result.error, at_sender=True)
