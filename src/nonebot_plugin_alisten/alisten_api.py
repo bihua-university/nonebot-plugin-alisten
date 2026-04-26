@@ -167,6 +167,7 @@ class SearchMusicRequest(BaseModel):
     keyword: str
     source: str
     pageSize: int = 10
+    pageIndex: int = 1
 
 
 class SearchMusicItem(BaseModel):
