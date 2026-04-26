@@ -62,9 +62,10 @@ async def test_music_search_success(app: App, respx_mock: respx.MockRouter):
         {
             "houseId": "room123",
             "password": "password123",
-            "name": "青花瓷",
+            "keyword": "青花瓷",
             "source": "wy",
             "pageSize": 10,
+            "pageIndex": 1,
         }
     )
 
@@ -114,9 +115,10 @@ async def test_music_search_with_source_prefix(app: App, respx_mock: respx.MockR
         {
             "houseId": "room123",
             "password": "password123",
-            "name": "稻香",
+            "keyword": "稻香",
             "source": "qq",
             "pageSize": 10,
+            "pageIndex": 1,
         }
     )
 
@@ -156,9 +158,10 @@ async def test_music_search_no_results(app: App, respx_mock: respx.MockRouter):
         {
             "houseId": "room123",
             "password": "password123",
-            "name": "不存在的歌曲",
+            "keyword": "不存在的歌曲",
             "source": "wy",
             "pageSize": 10,
+            "pageIndex": 1,
         }
     )
 
@@ -201,6 +204,7 @@ async def test_music_search_null_data(app: App, respx_mock: respx.MockRouter):
             "keyword": "不存在的歌曲",
             "source": "wy",
             "pageSize": 10,
+            "pageIndex": 1,
         }
     )
 
@@ -237,9 +241,10 @@ async def test_music_search_api_error(app: App, respx_mock: respx.MockRouter):
         {
             "houseId": "room123",
             "password": "password123",
-            "name": "青花瓷",
+            "keyword": "青花瓷",
             "source": "wy",
             "pageSize": 10,
+            "pageIndex": 1,
         }
     )
 
