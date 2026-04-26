@@ -7,7 +7,7 @@ from nonebot import get_driver
 from nonebot.drivers import HTTPClientMixin, Request
 from nonebot.log import logger
 from nonebot_plugin_user import UserSession
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field, RootModel, field_validator
 
 from .models import AlistenConfig
 
@@ -180,8 +180,13 @@ class SearchMusicItem(BaseModel):
 class SearchMusicResponse(BaseModel):
     """搜索音乐响应"""
 
-    data: list[SearchMusicItem] = Field(default=[], alias="list")
-    totalSize: int
+    data: list[SearchMusicItem] = Field(default_factory=list, alias="list")
+    totalSize: int = 0
+
+    @field_validator("data", mode="before")
+    @classmethod
+    def _coerce_null_data(cls, v: object) -> object:
+        return [] if v is None else v
 
 
 class CurrentMusicRequest(BaseModel):
