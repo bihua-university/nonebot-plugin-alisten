@@ -164,7 +164,7 @@ class SearchMusicRequest(BaseModel):
 
     houseId: str
     password: str = ""
-    name: str
+    keyword: str
     source: str
     pageSize: int = 10
 
@@ -406,11 +406,11 @@ class AlistenAPI:
             json_data=request_data.model_dump(),
         )
 
-    async def music_search(self, name: str, source: str) -> SearchMusicResponse | ErrorResponse:
+    async def music_search(self, keyword: str, source: str) -> SearchMusicResponse | ErrorResponse:
         """在指定音乐平台搜索音乐
 
         Args:
-            name: 音乐名称或搜索关键词
+            keyword: 音乐名称或搜索关键词
             source: 音乐源（wy=网易云音乐，qq=QQ音乐，db=酷狗音乐）
 
         Returns:
@@ -419,7 +419,7 @@ class AlistenAPI:
         request_data = SearchMusicRequest(
             houseId=self.config.house_id,
             password=self.config.house_password,
-            name=name,
+            keyword=keyword,
             source=source,
         )
 
